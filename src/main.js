@@ -1,10 +1,19 @@
 import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'
+
+// Router
+import router from "./router/index.js";
+
+//PrimeVue Theme
 import PrimeVue from 'primevue/config';
 import { definePreset } from '@primevue/themes';
 import Aura from '@primevue/themes/aura';
 
+// PrimeVue Icons
+import 'primeicons/primeicons.css';
+
+// PrimeVue Components
 import AutoComplete from "primevue/autocomplete";
 import CascadeSelect from "primevue/cascadeselect";
 import Checkbox from "primevue/checkbox";
@@ -43,6 +52,7 @@ import Image from "primevue/image";
 import Avatar from "primevue/avatar";
 import Badge from "primevue/badge";
 
+// My design preset
 const MyPreset = definePreset(Aura, {
     semantic: {
         primary: {
@@ -91,16 +101,24 @@ const MyPreset = definePreset(Aura, {
     }
 });
 
-createApp(App)
-    .use(PrimeVue, {
-        theme: {
-            preset: MyPreset,
-            options: {
-                darkModeSelector: 'system',
-            }
-        },
-    })
-    .component('pv-autocomplete', AutoComplete)
+// Create app instance
+const app = createApp(App);
+
+//Use Router
+app.use(router);
+
+// Use PrimeVue
+app.use(PrimeVue, {
+    theme: {
+        preset: MyPreset,
+        options: {
+            darkModeSelector: 'system',
+        }
+    },
+});
+
+// Use PrimeVue Components
+app.component('pv-autocomplete', AutoComplete)
     .component('pv-cascadeselect', CascadeSelect)
     .component('pv-checkbox', Checkbox)
     .component('pv-datepicker', DataPicker)
@@ -137,4 +155,6 @@ createApp(App)
     .component('pv-image', Image)
     .component('pv-avatar', Avatar)
     .component('pv-badge', Badge)
-    .mount('#app')
+
+// Mount the app
+app.mount('#app')
