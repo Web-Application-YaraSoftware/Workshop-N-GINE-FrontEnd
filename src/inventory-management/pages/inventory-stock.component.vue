@@ -1,9 +1,11 @@
 <script setup>
+
 </script>
 
 <template>
-  <router-view/>
+<h1>Stock</h1>
 </template>
 
 <style scoped>
+
 </style>
