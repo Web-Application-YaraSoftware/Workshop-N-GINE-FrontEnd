@@ -5,7 +5,10 @@ import App from './App.vue'
 // Router
 import router from "./router/index.js";
 
-//PrimeVue Theme
+// i18n
+import i18n from "./i18n.js";
+
+// PrimeVue Theme
 import PrimeVue from 'primevue/config';
 import { definePreset } from '@primevue/themes';
 import Aura from '@primevue/themes/aura';
@@ -103,6 +106,9 @@ const MyPreset = definePreset(Aura, {
 
 // Create app instance
 const app = createApp(App);
+
+// Use i18n
+app.use(i18n);
 
 //Use Router
 app.use(router);
