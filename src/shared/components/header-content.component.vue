@@ -25,6 +25,9 @@ const workshopStore = useWorkshopStore();
 </template>
 
 <style scoped>
+header {
+  height: 40px;
+}
 .p-toolbar {
   padding: 1rem;
   font-size: 1.5rem;
