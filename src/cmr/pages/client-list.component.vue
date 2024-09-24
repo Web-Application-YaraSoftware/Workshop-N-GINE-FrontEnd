@@ -1,10 +1,14 @@
 <script setup>
+import NewClientDialog from "../components/new-client-dialog.component.vue";
+import ModelMessageDialog from "../../shared/components/model-message-dialog.component.vue";
 import {ClientService} from "../services/client.service.js";
-import {onMounted, ref} from "vue";
+import {onMounted, ref, provide} from "vue";
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import {User} from "../model/user.entity.js";
+import {useWorkshopStore} from "../../shared/services/workshop-store.js";
 
+//Clients
 const clientItem = ref({});
 const clients = ref();
 const selectedClients = ref();
@@ -12,15 +16,31 @@ const filters = ref({
   'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
 });
 
-const deleteClientsDialog = ref(false);
+//Dialogs
+const clientDialog = ref(false);
+const messageDialog = ref(false);
 
+//Provides
+provide('dialogVisibility',{
+  clientDialog
+});
+
+//Services
+const workshopStore = useWorkshopStore();
 const clientService = new ClientService();
 
+//Api Requests
 function getClients(){
   clientService.getAllByWorkshop(1)
       .then(response => {
         clients.value = buildClientListFromResponseData(response.data);
       });
+}
+
+//Methods
+function openNew(){
+  clientItem.value = {};
+  clientDialog.value = true;
 }
 
 function buildClientListFromResponseData(clients){
@@ -32,9 +52,74 @@ function buildClientListFromResponseData(clients){
   });
 }
 
+function buildClientFromResponseData(client){
+  return {
+    id: client.id,
+    workshopID: client.workshop_id,
+    firstName: client.first_name,
+    lastName: client.last_name,
+    dni: client.dni,
+    email: client.email,
+    password: client.dni,
+    image: client.image,
+    state: client.state,
+    userType: client.user_type
+  };
+
+}
+
 function confirmDeleteSelected(client){
-  let deleteClientDialog;
-  deleteClientDialog.value = true;
+  clientDialog.value = false;
+}
+
+function onCreateClient(client){
+  const {firstName, lastName, dni, email} = client;
+  const random = (Math.floor(Math.random() * 2));
+  const imageRandom = random === 1? 'https://xsgames.co/randomusers/avatar.php?g=male': 'https://xsgames.co/randomusers/avatar.php?g=female';
+  const newClient = {
+    id: Math.floor(Math.random() * 1000),
+    workshop_id: workshopStore.workshop?.id,
+    first_name: firstName,
+    last_name: lastName,
+    dni: dni,
+    email: email,
+    password: dni,
+    image: imageRandom,
+    state: {
+      id: 1,
+      name: 'ACTIVE'
+    },
+    user_type: {
+      id: 1,
+      name: 'workshop_client'
+    }
+  };
+  console.log(newClient);
+  clientService.create(newClient)
+    .then(response => {
+      clients.value = [buildClientFromResponseData(response.data), ...clients.value];
+    });
+}
+
+function confirmDeleteClient(client){
+  clientItem.value = client;
+  messageDialog.value = true;
+}
+
+function onAcceptDeleteClient(){
+  messageDialog.value = false;
+  deleteClient();
+}
+
+function onRejectDeleteClient(){
+  messageDialog.value = false;
+}
+
+function deleteClient(){
+  clientService.delete(clientItem.value.id)
+    .then(response => {
+      clients.value = clients.value.filter(c => c.id !== clientItem.value.id);
+    });
 }
 
 onMounted(() => {
@@ -57,8 +142,7 @@ onMounted(() => {
           </pv-iconfield>
         </template>
         <template #end>
-          <pv-button label="New" icon="pi pi-plus" severity="success" class="mr-2" />
-<!--TODO: @click="openNew"-->
+          <pv-button label="New" icon="pi pi-plus" severity="success" class="mr-2" @click="openNew"/>
           <pv-button label="Delete" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="!selectedClients || !selectedClients.length"/>
         </template>
       </pv-toolbar>
@@ -78,20 +162,31 @@ onMounted(() => {
           currentPageReportTemplate="Showing {first} to {last} of {totalRecords} clients"
       >
         <pv-column selectionMode="multiple" style="width: 3rem" :exportable="false"></pv-column>
-        <pv-column field="firstName" header="Name" sortable style="width: fit-content"></pv-column>
-        <pv-column field="lastName" header="Last name" sortable style="width: fit-content"></pv-column>
+        <pv-column field="fullName" header="Full name" sortable style="width: fit-content">
+          <template #body="slotProps">
+            <router-link
+                :to="{ name: 'client-details', params: { id: slotProps.data.id } }"
+                class="ml-2 text-white no-underline hover:underline">
+              {{slotProps.data.firstName}} {{slotProps.data.lastName}}
+            </router-link>
+          </template>
+        </pv-column>
         <pv-column field="dni" header="N° document" sortable style="width: fit-content"></pv-column>
-        <pv-column field="email" header="email" sortable style="width: fit-content"></pv-column>
+        <pv-column field="email" header="Email" sortable style="width: fit-content"></pv-column>
         <pv-column :exportable="false" style="width: min-content">
           <template #body="slotProps">
-            <pv-button icon="pi pi-pencil" outlined rounded class="mr-2" />
-<!--            @click="editProduct(slotProps.data)"-->
-            <pv-button icon="pi pi-trash" outlined rounded severity="danger" />
-<!--            @click="confirmDeleteProduct(slotProps.data)"-->
+            <pv-button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteClient(slotProps.data)"/>
           </template>
         </pv-column>
       </pv-datatable>
     </section>
+    <new-client-dialog @acceptRegister="onCreateClient"/>
+    <model-message-dialog
+        :visible="messageDialog"
+        @confirm="onAcceptDeleteClient"
+        @reject="onRejectDeleteClient"
+        @update:visible="($event)=> messageDialog = $event"
+    />
   </div>
 </template>
 
