@@ -35,6 +35,7 @@ const router = createRouter({
                 },
                 {
                     path: 'inventory',
+                    name: 'inventory',
                     redirect: {name: 'stock'},
                     component: () => import('../service-management/components/inventory-header.component.vue'),
                     children: [
@@ -52,6 +53,7 @@ const router = createRouter({
                 },
                 {
                     path: 'metrics',
+                    name: 'metrics',
                     redirect: {name: 'interventions-by-date'},
                     component: () => import('../analytics/components/metrics-header.component.vue'),
                     children:[
