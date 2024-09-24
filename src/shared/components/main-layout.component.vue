@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <h1>Soy dashboard</h1>
+  <h1>Main Layout</h1>
   <router-view/>
 </template>
 
