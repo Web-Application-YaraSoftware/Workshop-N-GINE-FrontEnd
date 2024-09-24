@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import './style.css'
 import 'primeflex/primeflex.css';
 import App from './App.vue'
@@ -162,6 +163,9 @@ app.component('pv-autocomplete', AutoComplete)
     .component('pv-image', Image)
     .component('pv-avatar', Avatar)
     .component('pv-badge', Badge)
+
+// Use Pinia
+app.use(createPinia());
 
 // Mount the app
 app.mount('#app')
