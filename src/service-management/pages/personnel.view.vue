@@ -189,6 +189,8 @@ provide('closeDialog', closeDialog);
 .personnel-container {
   padding: 20px;
   background-color: #e6f0f8;
+  height: calc(100vh - 40px);
+  overflow-y: auto;
 }
 
 .header {
