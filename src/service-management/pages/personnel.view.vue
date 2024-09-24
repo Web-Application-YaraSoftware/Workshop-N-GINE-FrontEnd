@@ -44,7 +44,19 @@ onMounted(() => {
   getPersonnel();
 });
 
-
+//Filter mechanics based on search query
+const filteredMechanics = computed(() => {
+  if (!searchQuery.value) {
+    return mechanics.value; //No filter, return all mechanics
+  }
+  return mechanics.value.filter(mechanic =>
+      mechanic.firstName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      mechanic.lastName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      mechanic.dni.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      mechanic.email.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      `${mechanic.firstName} ${mechanic.lastName}`.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+});
 
 //Function to open the modal for creating a new mechanic
 const openCreateModal = () => {
