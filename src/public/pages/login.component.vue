@@ -88,11 +88,6 @@
   padding: 3rem;
 }
 
-.w-full {
-  width: 100%;
-
-}
-
 .mb-4 {
   margin-bottom: 1rem;
 }
