@@ -11,7 +11,7 @@ const router = createRouter({
                 {
                     path: 'personnel',
                     name: 'personnel',
-                    component: () => import('../service-management/pages/personnel-list.component.vue')
+                    component: () => import('../service-management/pages/personnel.view.vue')
                 },
                 {
                     path: 'clients',
