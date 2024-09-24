@@ -25,14 +25,5 @@ const workshopStore = useWorkshopStore();
 </template>
 
 <style scoped>
-.p-toolbar {
-  padding: 1rem;
-  font-size: 1.5rem;
-}
-
-.pi-user {
-  font-size: 1.5rem;
-  padding-right: 5px;
-}
 
 </style>
