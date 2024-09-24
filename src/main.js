@@ -25,6 +25,7 @@ import Checkbox from "primevue/checkbox";
 import DataPicker from "primevue/datepicker";
 import FloatLabel from "primevue/floatlabel";
 import IconField from "primevue/iconfield";
+import InputIcon from 'primevue/inputicon';
 import InputGroup from "primevue/inputgroup";
 import InputMask from "primevue/inputmask";
 import InputNumber from "primevue/inputnumber";
@@ -37,6 +38,7 @@ import ToggleSwitch from "primevue/toggleswitch";
 import Button from "primevue/button";
 import SpeedDial from "primevue/speeddial";
 import DataTable from "primevue/datatable";
+import Column from 'primevue/column';
 import Paginator from "primevue/paginator";
 import Timeline from "primevue/timeline";
 import Accordion from "primevue/accordion";
@@ -132,6 +134,7 @@ app.component('pv-autocomplete', AutoComplete)
     .component('pv-datepicker', DataPicker)
     .component('pv-floatlabel', FloatLabel)
     .component('pv-iconfield', IconField)
+    .component('pv-inputicon', InputIcon)
     .component('pv-inputgroup', InputGroup)
     .component('pv-inputmask', InputMask)
     .component('pv-inputnumber', InputNumber)
@@ -144,6 +147,7 @@ app.component('pv-autocomplete', AutoComplete)
     .component('pv-button', Button)
     .component('pv-speeddial', SpeedDial)
     .component('pv-datatable', DataTable)
+    .component('pv-column', Column)
     .component('pv-paginator', Paginator)
     .component('pv-timeline', Timeline)
     .component('pv-accordion', Accordion)
