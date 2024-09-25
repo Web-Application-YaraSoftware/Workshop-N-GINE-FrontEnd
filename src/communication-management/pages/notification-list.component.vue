@@ -3,15 +3,17 @@ import NotificationItem from '../components/notification-item.component.vue'
 import { NotificationService } from "../services/notification.service.js";
 import { Notification } from "../model/notification.entity.js";
 import { onMounted, ref } from "vue";
+import {useWorkshopStore} from "../../shared/services/workshop-store.js";
 
 const notifications = ref([]);
 const notificationService = new NotificationService();
+const workshopStore = useWorkshopStore();
 
 function getNotifications() {
-  notificationService.getAll()
+  notificationService.getByUserId(workshopStore.user.id)
       .then(response => {
-        console.log("Dato API:", response.data);
         notifications.value = buildNotificationListFromResponseData(response.data)
+        console.log(notifications.value)
       })
 
 }
@@ -27,22 +29,21 @@ onMounted(() => {
 
 
 <template>
-
-  <section>
-    <h1>Notifications</h1>
+  <section class="notifications-container">
+    <h1 class="text-4xl">Notifications</h1>
     <div class="flex flex-column gap-5">
-      <div v-for="notification in notifications" :key="notification.id">
-        <NotificationItem :notification="notification" />
-      </div>
+      <notification-item v-for="notification in notifications" :key="notification.id" :notification="notification" />
     </div>
   </section>
-
-
 </template>
 
 <style scoped>
-*{
-  font-family: 'Roboto', sans-serif;
+.notifications-container{
+  width: 100%;
+  height: calc(100vh - 40px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
-
 </style>
