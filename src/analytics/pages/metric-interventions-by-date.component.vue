@@ -1,9 +1,11 @@
 <script setup>
+
 </script>
 
 <template>
-  <router-view/>
+  <h1>Metric interventions by an specific date</h1>
 </template>
 
 <style scoped>
+
 </style>
