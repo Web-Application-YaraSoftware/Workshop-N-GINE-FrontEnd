@@ -5,38 +5,38 @@ import NewMechanicDialog from "../components/mechanic-form-dialog.component.vue"
 import { PersonnelService } from '../services/personnel.service.js';
 import { Mechanic } from '../model/mechanic.entity.js';
 
-const isModalOpen = ref(false); //Control modal new mechanic visibility
-const selectedMechanic = ref(null); //Track which mechanic is selected (for editing)
+const isModalOpen = ref(false); // Control modal new mechanic visibility
+const selectedMechanic = ref(null); // Track which mechanic is selected (for editing)
 const mechanics = ref([]);
-const noMechanics = ref(false); //Handle 'No Mechanics' state
-const searchQuery = ref(''); //Search input value
+const noMechanics = ref(false); // Handle 'No Mechanics' state
+const searchQuery = ref(''); // Search input value
 
-//API service instance
+// API service instance
 const personnelService = new PersonnelService();
 
-//Fetch personnel from API on mount
+// Fetch personnel from API on mount
 const getPersonnel = async () => {
   try {
     const response = await personnelService.getAllPersonnel();
     const mechanicData = response.data;
 
     if (mechanicData.length === 0) {
-      noMechanics.value = true; //Set noMechanics flag if no data is returned
+      noMechanics.value = true; // Set noMechanics flag if no data is returned
     } else {
-      noMechanics.value = false; //Data exists, hide "No personnel" message
+      noMechanics.value = false; // Data exists, hide "No personnel" message
       mechanics.value = createPersonnelListFromResponseData(mechanicData);
     }
   } catch (error) {
     console.error('Error fetching personnel:', error);
-    noMechanics.value = true; //In case of error, show "No personnel" message
+    noMechanics.value = true; // In case of error, show "No personnel" message
   }
 };
 
-//Helper function to map response data to Mechanic objects
+// Helper function to map response data to Mechanic objects
 const createPersonnelListFromResponseData = (mechanicsData) => {
   return mechanicsData.map(mechanic => {
-    const { id, workshop_id, state_id, user_type, first_name, last_name, dni, email, password, image } = mechanic;
-    return new Mechanic(id, workshop_id, state_id, user_type, first_name, last_name, dni, email, password, image);
+    const { id, workshop_id, first_name, last_name, dni, email, password, image,  state, user_type} = mechanic;
+    return new Mechanic(id, workshop_id, first_name, last_name, dni, email, password, image, state, user_type);
   });
 };
 
@@ -44,10 +44,10 @@ onMounted(() => {
   getPersonnel();
 });
 
-//Filter mechanics based on search query
+// Filter mechanics based on search query
 const filteredMechanics = computed(() => {
   if (!searchQuery.value) {
-    return mechanics.value; //No filter, return all mechanics
+    return mechanics.value; // No filter, return all mechanics
   }
   return mechanics.value.filter(mechanic =>
       mechanic.firstName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
@@ -58,58 +58,58 @@ const filteredMechanics = computed(() => {
   );
 });
 
-//Function to open the modal for creating a new mechanic
+// Function to open the modal for creating a new mechanic
 const openCreateModal = () => {
-  selectedMechanic.value = null; //Reset selected mechanic
-  isModalOpen.value = true; //Open modal
+  selectedMechanic.value = null; // Reset selected mechanic
+  isModalOpen.value = true; // Open modal
 };
 
-//Function to open the modal for updating an existing mechanic
+// Function to open the modal for updating an existing mechanic
 const openUpdateModal = (mechanic) => {
   selectedMechanic.value = { ...mechanic }; // Set selected mechanic
   isModalOpen.value = true; // Open modal
 };
 
-//Function to handle creating a new mechanic
+// Function to handle creating a new mechanic
 const createMechanic = async (newMechanicData) => {
   try {
-    const defaultWorkshopId = mechanics.value.length > 0 ? mechanics.value[0].workshopId : 1; //Default workshopId
+    const defaultWorkshopId = mechanics.value.length > 0 ? mechanics.value[0].workshopId : 1; // Default workshopId
 
     const newMechanic = new Mechanic(
-        null, //No ID when creating a new mechanic (handled by backend)
+        null, // No ID when creating a new mechanic (handled by backend)
         newMechanicData.workshopId || defaultWorkshopId,
-        newMechanicData.stateId || 1,
-        newMechanicData.userType || 'mechanic',
         newMechanicData.firstName,
         newMechanicData.lastName,
         newMechanicData.dni,
         newMechanicData.email,
         newMechanicData.password,
-        newMechanicData.image || '/path/to/default-image.jpg'
+        newMechanicData.image || '/path/to/default-image.jpg',
+        newMechanicData.state || { id: 1, name: 'ACTIVE' }, // Ensure state is passed as an object
+        newMechanicData.userType || { id: 2, type: 'mechanic' } // Ensure userType is passed as an object
     );
 
     const response = await personnelService.postPersonnel(newMechanic);
-    mechanics.value.push(response.data); //Add new mechanic to the list
+    mechanics.value.push(response.data); // Add new mechanic to the list
   } catch (error) {
     console.error('Error creating mechanic:', error);
   }
   closeDialog();
 };
 
-//Function to handle updating an existing mechanic
+// Function to handle updating an existing mechanic
 const updateMechanic = async (updatedMechanicData) => {
   try {
     const updatedMechanic = new Mechanic(
         updatedMechanicData.id,
         selectedMechanic.value.workshopId,
-        selectedMechanic.value.stateId,
-        selectedMechanic.value.userType,
         updatedMechanicData.firstName,
         updatedMechanicData.lastName,
         updatedMechanicData.dni,
         updatedMechanicData.email,
         updatedMechanicData.password,
-        selectedMechanic.value.image
+        updatedMechanicData.image || selectedMechanic.value.image,
+        updatedMechanicData.state || selectedMechanic.value.state, // Ensure state is passed as an object
+        updatedMechanicData.userType || selectedMechanic.value.userType // Ensure userType is passed as an object
     );
 
     await personnelService.putPersonnel(updatedMechanic.id, updatedMechanic);
@@ -123,7 +123,7 @@ const updateMechanic = async (updatedMechanicData) => {
   closeDialog();
 };
 
-//Function to handle deleting a mechanic
+// Function to handle deleting a mechanic
 const deleteMechanic = async (id) => {
   try {
     await personnelService.deletePersonnel(id);
@@ -134,12 +134,12 @@ const deleteMechanic = async (id) => {
   closeDialog();
 };
 
-//Function to close the modal
+// Function to close the modal
 const closeDialog = () => {
   isModalOpen.value = false; // Close the modal
 };
 
-//Provide shared state and methods to child components
+// Provide shared state and methods to child components
 provide('isModalOpen', isModalOpen);
 provide('selectedMechanic', selectedMechanic);
 provide('createMechanic', createMechanic);
@@ -188,7 +188,6 @@ provide('closeDialog', closeDialog);
 <style scoped>
 .personnel-container {
   padding: 20px;
-  background-color: #e6f0f8;
   height: calc(100vh - 40px);
   overflow-y: auto;
 }
