@@ -108,6 +108,29 @@ onMounted(() => {
   getInterventions();
 });
 
+// Show the dialog
+const openDialog = () => {
+  isDialogVisible.value = true;
+};
+
+// Close the dialog
+const closeDialog = () => {
+  isDialogVisible.value = false;
+};
+
+// Handle form submission from the dialog
+const submitIntervention = async (interventionData) => {
+  try {
+    await interventionsService.postIntervention(interventionData);
+    // After submission, reload interventions
+    onMounted(() => {
+      getInterventions();
+    });
+  } catch (error) {
+    console.error('Error submitting intervention:', error);
+  }
+  closeDialog();
+};
 
 // Computed property to filter interventions based on selected status
 const filteredInterventions = computed(() => {
@@ -220,6 +243,13 @@ const isActiveFilter = (status) => {
         No interventions found.
       </div>
     </section>
+
+    <!-- New Intervention Dialog -->
+    <new-intervention-dialog
+        :visible="isDialogVisible"
+        @close="closeDialog"
+        @submit="submitIntervention"
+    />
   </section>
 </template>
 
