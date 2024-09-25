@@ -3,7 +3,7 @@ export class Notification {
         this.id = id;
         this.state = state;
         this.userId = user_id;
-        this.date = date;
+        this.date = new Date(date);
         this.content = content;
         this.endpoint = endpoint;
     }
