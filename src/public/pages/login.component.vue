@@ -1,5 +1,6 @@
 <script setup>
 import {ref} from "vue";
+import {useAuthStore} from "../../iam/services/auth-store.js";
 import {useWorkshopStore} from "../../shared/services/workshop-store.js";
 import {AccessService} from "../../iam/services/access.service.js";
 import {useRouter} from "vue-router";
@@ -7,6 +8,7 @@ import { useToast } from 'primevue/usetoast';
 
 const workshopStore = useWorkshopStore();
 const accessService = new AccessService();
+const authStore = useAuthStore();
 const router = useRouter();
 const toast = useToast();
 
@@ -21,6 +23,7 @@ function onSubmit(event) {
         workshopStore.role = response.data[0].user_type.id;
         workshopStore.user = response.data[0];
         localStorage.setItem('token', JSON.stringify(true));
+        authStore.setAuth(true);
         toast.add({severity:'success', summary: 'Success login', detail: 'Valid credentials', life: 5000});
         router.push({name: 'home'});
       } else {
