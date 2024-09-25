@@ -171,9 +171,7 @@ app.component('pv-autocomplete', AutoComplete)
     .component('pv-toast', Toast)
     .component('pv-image', Image)
     .component('pv-avatar', Avatar)
-    .component('pv-badge', Badge)
-    .component('pv-datepicker', DatePicker)
-    .component('pv-textarea', TextArea);
+    .component('pv-badge', Badge);
 
 // Use Toast Service
 app.use(ToastService);
