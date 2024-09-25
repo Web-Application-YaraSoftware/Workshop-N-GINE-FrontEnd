@@ -19,6 +19,7 @@ const filters = ref({
 //Dialogs
 const clientDialog = ref(false);
 const messageDialog = ref(false);
+const messageClientsDialog = ref(false);
 
 //Provides
 provide('dialogVisibility',{
@@ -28,6 +29,7 @@ provide('dialogVisibility',{
 //Services
 const workshopStore = useWorkshopStore();
 const clientService = new ClientService();
+const toast = useToast();
 
 //Api Requests
 function getClients(){
@@ -69,7 +71,32 @@ function buildClientFromResponseData(client){
 }
 
 function confirmDeleteSelected(client){
-  clientDialog.value = false;
+  messageClientsDialog.value = true;
+}
+
+function onAcceptedDeleteSelectedClients(){
+  messageClientsDialog.value = false;
+  deleteSelectedClients();
+}
+
+function onRejectedDeleteSelectedClients(){
+  messageClientsDialog.value = false;
+}
+
+function deleteSelectedClients(){
+  clients.value = clients.value.filter(
+      client => {
+        if(selectedClients.value.includes(client)){
+          clientService.delete(client.id).then(
+              response => {
+                toast.add({severity:'success', summary: 'Successful', detail: 'Clients deleted', life: 3000});
+              }
+          );
+          return false;
+        }
+        return true;
+      }
+  );
 }
 
 function onCreateClient(client){
@@ -98,6 +125,7 @@ function onCreateClient(client){
   clientService.create(newClient)
     .then(response => {
       clients.value = [buildClientFromResponseData(response.data), ...clients.value];
+      toast.add({severity:'success', summary: 'Successful', detail: 'Client registered', life: 3000});
     });
 }
 
@@ -119,6 +147,7 @@ function deleteClient(){
   clientService.delete(clientItem.value.id)
     .then(response => {
       clients.value = clients.value.filter(c => c.id !== clientItem.value.id);
+      toast.add({severity:'success', summary: 'Successful', detail: 'Client deleted', life: 3000})
     });
 }
 
@@ -187,19 +216,26 @@ onMounted(() => {
         @reject="onRejectDeleteClient"
         @update:visible="($event)=> messageDialog = $event"
     />
+    <model-message-dialog
+        :visible="messageClientsDialog"
+        @confirm="onAcceptedDeleteSelectedClients"
+        @reject="onRejectedDeleteSelectedClients"
+        @update:visible="($event)=> messageClientsDialog = $event"
+    />
   </div>
 </template>
 
 <style scoped>
   .clients {
     width: 100%;
+    height: calc(100vh - 40px);
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 2rem;
   }
   .table-container {
     width: 100%;
-    overflow-x: auto;
   }
   .table {
     min-width: fit-content;

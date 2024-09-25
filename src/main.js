@@ -4,6 +4,9 @@ import './style.css'
 import 'primeflex/primeflex.css';
 import App from './App.vue'
 
+//Toast service
+import ToastService from 'primevue/toastservice';
+
 // Router
 import router from "./router/index.js";
 
@@ -167,6 +170,9 @@ app.component('pv-autocomplete', AutoComplete)
     .component('pv-image', Image)
     .component('pv-avatar', Avatar)
     .component('pv-badge', Badge)
+
+// Use Toast Service
+app.use(ToastService);
 
 // Use Pinia
 app.use(createPinia());
