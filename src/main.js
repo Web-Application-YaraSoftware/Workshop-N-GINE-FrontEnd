@@ -4,6 +4,9 @@ import './style.css'
 import 'primeflex/primeflex.css';
 import App from './App.vue'
 
+//Toast service
+import ToastService from 'primevue/toastservice';
+
 // Router
 import router from "./router/index.js";
 
@@ -58,6 +61,8 @@ import Toast from "primevue/toast";
 import Image from "primevue/image";
 import Avatar from "primevue/avatar";
 import Badge from "primevue/badge";
+import DatePicker from "primevue/datepicker";
+import TextArea from "primevue/textarea";
 
 // My design preset
 const MyPreset = definePreset(Aura, {
@@ -166,7 +171,10 @@ app.component('pv-autocomplete', AutoComplete)
     .component('pv-toast', Toast)
     .component('pv-image', Image)
     .component('pv-avatar', Avatar)
-    .component('pv-badge', Badge)
+    .component('pv-badge', Badge);
+
+// Use Toast Service
+app.use(ToastService);
 
 // Use Pinia
 app.use(createPinia());

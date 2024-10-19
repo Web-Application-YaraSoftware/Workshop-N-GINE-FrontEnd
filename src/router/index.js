@@ -1,4 +1,5 @@
 import {createRouter, createWebHistory} from "vue-router";
+import {useAuthStore} from "../iam/services/auth-store.js";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -151,6 +152,15 @@ const router = createRouter({
             component: () => import('../public/pages/page-not-found.component.vue')
         }
     ]
+});
+
+router.beforeEach((to, from, next) => {
+    const authStore = useAuthStore();
+    if (to.name !== 'login' && to.name !== 'register' && !authStore.isAuthenticated) {
+        next({name: 'login'});
+    } else {
+        next();
+    }
 });
 
 export default router;

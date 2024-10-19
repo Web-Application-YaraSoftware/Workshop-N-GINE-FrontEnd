@@ -1,5 +1,5 @@
-export class Mechanic {
-    constructor(id, workshopId, firstName, lastName, dni, email, password, image,  state, userType) {
+export class Client {
+    constructor(id, workshopId, firstName, lastName, dni, email, password, image, state, userType) {
         this.id = id;
         this.workshopId = workshopId;
         this.firstName = firstName;
@@ -12,4 +12,3 @@ export class Mechanic {
         this.userType = userType;
     }
 }
-
