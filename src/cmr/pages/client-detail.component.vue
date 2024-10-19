@@ -103,7 +103,7 @@ function onDismiss() {
 }
 
 function viewVehicleDetail(vehicle) {
-  router.push(`/vehicles/${vehicle.id}`);
+  router.push(`/vehicle/${vehicle.id}`);
 }
 
 onMounted(() => {
