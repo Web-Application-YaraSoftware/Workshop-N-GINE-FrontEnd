@@ -1,9 +1,24 @@
+import { User } from './user.entity.js';
+import { IotDispositive } from './iot-dispositive.entity.js';
+
 export class Vehicle {
-    constructor(id, user_id, license_plate, brand, model) {
-        this.id = id;
-        this.userId = user_id;
-        this.licensePlate = license_plate;
-        this.brand = brand;
-        this.model = model;
-    }
+  constructor({
+                id = 0,
+                licensePlate = '',
+                brand = '',
+                model = '',
+                owner = new User(),
+                image = '',
+                iotDispositive = new IotDispositive(),
+                interventionRegister = []
+              } = {}) {
+    this.id = id;
+    this.licensePlate = licensePlate;
+    this.brand = brand;
+    this.model = model;
+    this.owner = owner;
+    this.image = image;
+    this.iotDispositive = iotDispositive;
+    this.interventionRegister = interventionRegister;
+  }
 }
