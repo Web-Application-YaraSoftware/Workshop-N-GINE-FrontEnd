@@ -11,6 +11,10 @@ export class VehicleService {
         });
     }
 
+    getById(id) {
+        return http.get(`${this.resourceEndpoint}/${id}`);
+    }
+
     getByClientDni(dni) {
         return http.get(this.resourceEndpoint, {
             params: {
