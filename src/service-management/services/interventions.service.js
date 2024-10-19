@@ -1,8 +1,16 @@
 import http from "../../shared/services/http-common.js";
 
 export class InterventionsService {
-    getAllInterventions() {
+    getAll() {
         return http.get('/interventions');
+    }
+
+    getAllByMechanicLeaderId(id) {
+        return http.get(`/interventions?mechanicLeaderId=${id}`);
+    }
+
+    getAllByMechanicAssistantId(id) {
+        return http.get(`/interventions`);
     }
 
     postIntervention(data) {
