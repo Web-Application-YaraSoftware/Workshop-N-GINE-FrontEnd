@@ -61,8 +61,7 @@ import Toast from "primevue/toast";
 import Image from "primevue/image";
 import Avatar from "primevue/avatar";
 import Badge from "primevue/badge";
-import DatePicker from "primevue/datepicker";
-import TextArea from "primevue/textarea";
+import Tag from "primevue/tag";
 
 // My design preset
 const MyPreset = definePreset(Aura, {
@@ -171,7 +170,8 @@ app.component('pv-autocomplete', AutoComplete)
     .component('pv-toast', Toast)
     .component('pv-image', Image)
     .component('pv-avatar', Avatar)
-    .component('pv-badge', Badge);
+    .component('pv-badge', Badge)
+    .component('pv-tag', Tag);
 
 // Use Toast Service
 app.use(ToastService);
