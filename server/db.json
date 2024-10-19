@@ -2500,7 +2500,7 @@
       "user_id": 3,
       "date": "2024-09-20T08:00:00",
       "content": "Necesita cambio de aceite",
-      "endpoint": "/interventions/1"
+      "endpoint": "/intervention/1"
     },
     {
       "id": 2,
@@ -2511,7 +2511,7 @@
       "user_id": 5,
       "date": "2024-09-21T09:00:00",
       "content": "Reemplazo de pastillas de freno",
-      "endpoint": "/interventions/2"
+      "endpoint": "/intervention/2"
     },
     {
       "id": 3,
@@ -2522,7 +2522,7 @@
       "user_id": 2,
       "date": "2024-09-22T10:00:00",
       "content": "Diagnóstico de motor completado",
-      "endpoint": "/tasks/3"
+      "endpoint": "/task/3/information"
     },
     {
       "id": 4,
@@ -2533,7 +2533,7 @@
       "user_id": 7,
       "date": "2024-09-23T11:00:00",
       "content": "Cambio de batería necesario",
-      "endpoint": "/interventions/4"
+      "endpoint": "/intervention/4"
     },
     {
       "id": 5,
@@ -2544,7 +2544,7 @@
       "user_id": 9,
       "date": "2024-09-24T12:00:00",
       "content": "Revisión de sistema de frenos",
-      "endpoint": "/interventions/5"
+      "endpoint": "/intervention/5"
     },
     {
       "id": 6,
@@ -2555,7 +2555,7 @@
       "user_id": 4,
       "date": "2024-09-25T13:00:00",
       "content": "Tarea asignada: reemplazo de correa",
-      "endpoint": "/tasks/6"
+      "endpoint": "/task/6/information"
     },
     {
       "id": 7,
@@ -2566,7 +2566,7 @@
       "user_id": 6,
       "date": "2024-09-26T14:00:00",
       "content": "Solicitud de piezas aprobada",
-      "endpoint": "/inventory_requests/7"
+      "endpoint": "/inventory/requests"
     },
     {
       "id": 8,
@@ -2577,7 +2577,7 @@
       "user_id": 8,
       "date": "2024-09-27T15:00:00",
       "content": "Intervención finalizada",
-      "endpoint": "/interventions/8"
+      "endpoint": "/intervention/8"
     },
     {
       "id": 9,
@@ -2588,7 +2588,7 @@
       "user_id": 3,
       "date": "2024-09-28T16:00:00",
       "content": "Cambio de neumáticos recomendado",
-      "endpoint": "/interventions/9"
+      "endpoint": "/intervention/9"
     },
     {
       "id": 10,
@@ -2599,7 +2599,7 @@
       "user_id": 5,
       "date": "2024-09-29T17:00:00",
       "content": "Actualización de estado de intervención",
-      "endpoint": "/interventions/10"
+      "endpoint": "/intervention/10"
     },
     {
       "id": 11,
@@ -2610,7 +2610,7 @@
       "user_id": 2,
       "date": "2024-09-30T18:00:00",
       "content": "Nueva tarea asignada",
-      "endpoint": "/tasks/11"
+      "endpoint": "/task/11/information"
     },
     {
       "id": 12,
@@ -2621,7 +2621,7 @@
       "user_id": 4,
       "date": "2024-10-01T09:00:00",
       "content": "Revisión de sistema eléctrico",
-      "endpoint": "/interventions/12"
+      "endpoint": "/intervention/12"
     },
     {
       "id": 13,
@@ -2629,10 +2629,10 @@
         "id": 2,
         "name": "UNREAD"
       },
-      "user_id": 6,
+      "user_id": 1,
       "date": "2024-10-02T10:00:00",
       "content": "Solicitud de piezas pendiente",
-      "endpoint": "/inventory_requests/13"
+      "endpoint": "/inventory/requests"
     },
     {
       "id": 14,
@@ -2640,10 +2640,10 @@
         "id": 1,
         "name": "READ"
       },
-      "user_id": 8,
+      "user_id": 1,
       "date": "2024-10-03T11:00:00",
       "content": "Intervención cancelada",
-      "endpoint": "/interventions/14"
+      "endpoint": "/intervention/14"
     },
     {
       "id": 15,
@@ -2654,7 +2654,7 @@
       "user_id": 3,
       "date": "2024-10-04T12:00:00",
       "content": "Reemplazo de parabrisas necesario",
-      "endpoint": "/interventions/15"
+      "endpoint": "/intervention/15"
     },
     {
       "id": 16,
@@ -2665,7 +2665,7 @@
       "user_id": 5,
       "date": "2024-10-05T13:00:00",
       "content": "Actualización de tareas",
-      "endpoint": "/tasks/16"
+      "endpoint": "/task/16/information"
     },
     {
       "id": 17,
@@ -2676,7 +2676,7 @@
       "user_id": 7,
       "date": "2024-10-06T14:00:00",
       "content": "Mantenimiento programado",
-      "endpoint": "/interventions/17"
+      "endpoint": "/intervention/17"
     },
     {
       "id": 18,
@@ -2687,7 +2687,7 @@
       "user_id": 9,
       "date": "2024-10-07T15:00:00",
       "content": "Cambio de aceite realizado",
-      "endpoint": "/interventions/18"
+      "endpoint": "/intervention/18"
     },
     {
       "id": 19,
@@ -2698,7 +2698,7 @@
       "user_id": 2,
       "date": "2024-10-08T16:00:00",
       "content": "Nueva solicitud de piezas",
-      "endpoint": "/inventory_requests/19"
+      "endpoint": "/inventory/requests"
     },
     {
       "id": 20,
@@ -2709,7 +2709,7 @@
       "user_id": 4,
       "date": "2024-10-09T17:00:00",
       "content": "Intervención en espera",
-      "endpoint": "/interventions/20"
+      "endpoint": "/intervention/20"
     },
     {
       "id": 21,
@@ -2720,7 +2720,7 @@
       "user_id": 6,
       "date": "2024-10-10T18:00:00",
       "content": "Diagnóstico completado",
-      "endpoint": "/interventions/21"
+      "endpoint": "/intervention/21"
     },
     {
       "id": 22,
@@ -2731,7 +2731,7 @@
       "user_id": 8,
       "date": "2024-10-11T09:00:00",
       "content": "Reparación de sistema de escape",
-      "endpoint": "/interventions/22"
+      "endpoint": "/intervention/22"
     },
     {
       "id": 23,
@@ -2742,7 +2742,7 @@
       "user_id": 3,
       "date": "2024-10-12T10:00:00",
       "content": "Recordatorio de mantenimiento",
-      "endpoint": "/interventions/23"
+      "endpoint": "/intervention/23"
     },
     {
       "id": 24,
@@ -2753,7 +2753,7 @@
       "user_id": 5,
       "date": "2024-10-13T11:00:00",
       "content": "Cambio de correa necesario",
-      "endpoint": "/interventions/24"
+      "endpoint": "/intervention/24"
     },
     {
       "id": 25,
@@ -2764,7 +2764,7 @@
       "user_id": 7,
       "date": "2024-10-14T12:00:00",
       "content": "Actualización de intervención",
-      "endpoint": "/interventions/25"
+      "endpoint": "/intervention/25"
     },
     {
       "id": 26,
@@ -2775,7 +2775,7 @@
       "user_id": 9,
       "date": "2024-10-15T13:00:00",
       "content": "Próxima cita programada",
-      "endpoint": "/interventions/26"
+      "endpoint": "/intervention/26"
     },
     {
       "id": 27,
@@ -2786,7 +2786,7 @@
       "user_id": 2,
       "date": "2024-10-16T14:00:00",
       "content": "Solicitud de reasignación de tarea",
-      "endpoint": "/tasks/27"
+      "endpoint": "/task/27/information"
     },
     {
       "id": 28,
@@ -2797,7 +2797,7 @@
       "user_id": 4,
       "date": "2024-10-17T15:00:00",
       "content": "Piezas recibidas",
-      "endpoint": "/inventory_requests/28"
+      "endpoint": "/inventory/requests"
     },
     {
       "id": 29,
@@ -2808,7 +2808,7 @@
       "user_id": 6,
       "date": "2024-10-18T16:00:00",
       "content": "Intervención rechazada",
-      "endpoint": "/interventions/29"
+      "endpoint": "/intervention/29"
     },
     {
       "id": 30,
@@ -2819,7 +2819,7 @@
       "user_id": 8,
       "date": "2024-10-19T17:00:00",
       "content": "Informe de intervención disponible",
-      "endpoint": "/interventions/30"
+      "endpoint": "/intervention/30"
     }
   ]
 }
