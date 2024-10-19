@@ -72,7 +72,7 @@ const fetchAndEnrichIntervention = (intervention) => {
 const getInterventions = () => {
   loading.value = true;
 
-  interventionsService.getAllInterventions()
+  interventionsService.getAll()
       .then(response => {
         const interventionData = response.data;
 
@@ -299,12 +299,6 @@ const isActiveFilter = (status) => {
   margin-top: 20px;
   width: 100%;
   overflow-x: auto;
-}
-
-p-datatable-sm {
-  text-align: center;
-  font-weight: bold;
-  padding: 10px;
 }
 
 .loading-indicator {
