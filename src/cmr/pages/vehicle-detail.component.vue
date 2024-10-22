@@ -2,16 +2,36 @@
 import {ref, onMounted} from 'vue';
 import {useRoute} from 'vue-router';
 import {Vehicle} from "../../service-management/model/vehicle.entity.js";
-
 import {VehicleService} from "../services/vehicle.service.js";
-import PreviousInterventions from "../components/previous-interventions.component.vue";
+import PreviousInterventions from "../components/register-interventions.component.vue";
+import {InterventionsService} from "../services/intervention.service.js";
+import {Intervention} from "../../service-management/model/intervention.entity.js";
 
 const route = useRoute();
 const vehicleService = new VehicleService();
+const registerInterventions = ref([]);
+const interventionsService = new InterventionsService();
 
 const vehicleId = ref(0);
 const vehicle = ref({});
 const currentView = ref('activityLog');
+
+function getRegisterInterventions() {
+  interventionsService.getAllByVehicleId(vehicleId.value)
+      .then(
+          (response) => {
+            registerInterventions.value = buildInterventionFromResponseData(response.data);
+          },
+          (error) => {
+            console.error(error);
+          }
+      );
+}
+
+function buildInterventionFromResponseData(data) {
+  return data.map((intervention) => new Intervention(intervention));
+}
+
 
 function loadVehicleIdFromRoute() {
   vehicleId.value = route.params.carId || 0;
@@ -36,6 +56,7 @@ function showIotInformation() {
 onMounted(() => {
   loadVehicleIdFromRoute();
   loadVehicleData();
+  getRegisterInterventions();
 });
 </script>
 
@@ -58,8 +79,7 @@ onMounted(() => {
         <div class="information-container">
           <previous-interventions
               v-if="currentView === 'activityLog'"
-              :vehicle="vehicle"
-              :isPanelActive="true"
+              :interventions="registerInterventions"
           />
         </div>
       </div>
@@ -104,14 +124,20 @@ onMounted(() => {
 
 .main-content {
   width: 100%;
+  align-items: center;
   border: 2px solid #ccc;
   padding: 0 20px;
   box-sizing: border-box;
   border-radius: 15px;
-  position: relative;
 }
 
 .information-container {
   margin-top: 20px;
+  max-height: 69vh;
+  max-width: 800px;
+  overflow-y: auto;
+  margin-left: auto;
+  margin-right: auto;
 }
+
 </style>
