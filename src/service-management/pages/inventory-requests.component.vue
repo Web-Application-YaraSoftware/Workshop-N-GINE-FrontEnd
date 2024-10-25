@@ -1,25 +1,26 @@
 <script setup>
-import {InventoryRequestService} from "../services/inventory-request.service.js";
+import {ProductRequestService} from "../services/product-request.service.js";
 import {onMounted, ref} from "vue";
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
-import {InventoryRequest} from "../model/inventory-request.entity.js";
+import {ProductRequest} from "../model/product-request.entity.js";
+import ModelMessageDialog from "../../shared/components/model-message-dialog.component.vue";
 
-const inventoryRequest = ref({});
 const requests = ref();
 const selectedRequests = ref();
+const tasks = ref();
 const filters = ref({
   'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
 });
 
-const messageDialog = ref(false)
+const isDialogVisible = ref(false);
+let selectedRequest = ref();
+let updatedStatus  = ref();
 
-const deleteRequestDialog = ref(false);
-
-const inventoryService = new InventoryRequestService();
+const inventoryService = new ProductRequestService();
 
 function getRequest(){
-  inventoryService.getAll()
+  inventoryService.getAllByWorkshopId(1)
       .then(response => {
         requests.value = buildRequestListFromResponseData(response.data);
       });
@@ -27,19 +28,26 @@ function getRequest(){
 
 function buildRequestListFromResponseData(requests){
   return requests.map(request => {
-    const auxItem = new InventoryRequest(request);
+    const auxItem = new ProductRequest(request);
     return auxItem;
   });
 }
 
-function confirmDeleteSelected(request){
-  let deleteRequestDialog;
-  deleteRequestDialog.value = true;
+
+function showUpdateDialog(item, newStatus) {
+  isDialogVisible.value = true;
+  selectedRequest = item;
+  updatedStatus = newStatus
 }
 
-function confirmDeleteRequest(request){
-  inventoryRequest.value = request;
-  messageDialog.value = true;
+function onConfirm() {
+  inventoryService.updateRequests(selectedRequest, updatedStatus)
+  console.log('Request Rejected',selectedRequest);
+  selectedRequest = '';
+}
+function onReject() {
+  console.log('Delete rejected');
+  selectedRequest = '';
 }
 
 onMounted(() => {
@@ -64,18 +72,25 @@ onMounted(() => {
           :rowsPerPageOptions="[5, 10, 25]"
           currentPageReportTemplate="Showing {first} to {last} of {totalRecords} requests"
       >
-        <pv-column selectionMode="multiple" style="width: 3rem" :exportable="false"></pv-column>
-        <pv-column field="description" header="Description" sortable style="width: fit-content"></pv-column>
-        <pv-column field="amount" header="Quantity" sortable style="width: fit-content"></pv-column>
-        <pv-column field="state.name" header="State" sortable style="width: fit-content"></pv-column>
+        <pv-column field="name" header="Name" sortable style="width: fit-content"></pv-column>
+        <pv-column field="requestedQuantity" header="Amount" sortable style="width: fit-content"></pv-column>
+        <pv-column field="requestedDate" header="Date" sortable style="width: fit-content"></pv-column>
+        <pv-column field="observation" header="Observation" sortable style="width: fit-content"></pv-column>
         <pv-column :exportable="false" style="width: min-content">
           <template #body="slotProps">
 
-            <pv-button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteRequest(slotProps.data)"/>
+            <pv-button icon="pi pi-trash" outlined rounded severity="danger" @click="showUpdateDialog(slotProps.data, 1)"/>
+            <pv-button icon="pi pi-pencil" outlined rounded severity="success" @click="showUpdateDialog(slotProps.data, 2)"/>
 
           </template>
         </pv-column>
       </pv-datatable>
+      <ModelMessageDialog :visible="isDialogVisible"
+                          title="Delete Confirmation"
+                          message="Are you sure you want to delete this request?"
+                          @confirm="onConfirm"
+                          @reject="onReject"
+                          @update:visible="isDialogVisible = $event"/>
     </section>
   </div>
 </template>
