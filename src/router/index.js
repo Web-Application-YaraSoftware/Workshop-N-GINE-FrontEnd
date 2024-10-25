@@ -29,7 +29,7 @@ const router = createRouter({
                     component: () => import('../service-management/pages/intervention-list.component.vue')
                 },
                 {
-                    path: 'intervention/:id',
+                    path: 'interventions/:id',
                     name: 'intervention-details',
                     component: () => import('../service-management/pages/intervention-detail.component.vue')
                 },
