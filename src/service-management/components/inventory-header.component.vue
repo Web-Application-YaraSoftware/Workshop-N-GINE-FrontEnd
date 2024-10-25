@@ -6,7 +6,6 @@ let title=ref("Stock");
 
 function titleHeader(newTitle){
   title.value = newTitle;
-  console.log(title)
 }
 
 </script>

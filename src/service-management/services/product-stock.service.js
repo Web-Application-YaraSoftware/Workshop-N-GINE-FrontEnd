@@ -1,10 +1,10 @@
 import http from "../../shared/services/http-common.js";
 
-export class InventoryItemService {
-    resourceEndpoint = '/inventory_items';
+export class ProductStockService {
+    resourceEndpoint = '/products-stock';
 
-    getAll(){
-        return http.get(this.resourceEndpoint);
+    getAllByWorkshopId(workshopId){
+        return http.get(`${this.resourceEndpoint}?workshopId=${workshopId}`);
     }
 
     getById(id){
