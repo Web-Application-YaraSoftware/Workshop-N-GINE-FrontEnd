@@ -1,12 +1,18 @@
 import http from "../../shared/services/http-common.js";
 
 export class ProductStockService {
-    resourceEndpoint = '/products-stock';
-
-    getAllByWorkshopId(workshopId){
-        return http.get(`${this.resourceEndpoint}?workshopId=${workshopId}`);
+    constructor() {
+        this.resourceEndpoint = '/products-stock';
+    }
+  
+    getAllByWorkshopId(id) {
+        return http.get(`${this.resourceEndpoint}?workshopId=${id}`);
     }
 
+    getById(productStockId) {
+        return http.get(`${this.resourceEndpoint}/${productStockId}`);
+    }
+  
     update(id, data){
         return http.put(`${this.resourceEndpoint}/${id}`, data);
     }

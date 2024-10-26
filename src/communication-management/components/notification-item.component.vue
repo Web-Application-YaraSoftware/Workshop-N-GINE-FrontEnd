@@ -1,6 +1,7 @@
 <script setup>
 import {Notification} from "../model/notification.entity.js";
 import {formatDate} from "../../shared/services/date.service.js";
+import {NotificationService} from "../services/notification.service.js";
 
 const props = defineProps({
   notification: {
@@ -8,20 +9,30 @@ const props = defineProps({
     required: true
   }
 });
+
+const notificationsService = new NotificationService();
+
+function changeIcon(){
+  if(props.notification.state === 1){
+    notificationsService.updateState(props.notification, 0)
+  }
+}
+
 </script>
 
 <template>
   <article class="notification-item">
     <div class="icon">
-      <span v-if="notification.state.id === 1" class="pi pi-bell" style="scale: 2.5"></span>
+      <span v-if="notification.state === 1" class="pi pi-bell" style="scale: 2.5"></span>
       <span v-else class="pi pi-bell-slash" style="scale: 2.5"></span>
     </div>
     <div class="content">
       <p>{{formatDate(notification.date)}}</p>
       <p> {{notification.content}} </p>
+
     </div>
     <div style="margin-left: auto">
-      <a :href="notification.endpoint">Go to the section</a>
+      <a :href="notification.endpoint" @click="changeIcon" >Go to the section</a>
     </div>
   </article>
 </template>

@@ -1,10 +1,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { InterventionsService } from '../services/interventions.service.js';
-import { ClientsService } from '../services/clients.service.js';
-import { VehiclesService } from '../services/vehicles.service.js';
-import { Client } from '../model/client.entity.js';
-import { Vehicle } from '../model/vehicle.entity.js';
+import { ClientsService } from '../../cmr/services/clients.service.js';
+import { VehiclesService } from '../../cmr/services/vehicles.service.js';
+import { Client } from '../../cmr/model/client.entity.js';
+import { Vehicle } from '../../cmr/model/vehicle.entity.js';
 import NewInterventionDialog from '../components/new-intervention-dialog.component.vue';
 
 // API service instances
@@ -49,8 +49,8 @@ const createVehicle = (vehicleData) => {
 // Function to fetch and enrich intervention data
 const fetchAndEnrichIntervention = (intervention) => {
   return Promise.all([
-    clientsService.getClientById(intervention.client_id),
-    vehiclesService.getCarById(intervention.vehicle_id)
+    clientsService.getById(intervention.client_id),
+    vehiclesService.getById(intervention.vehicle_id)
   ])
       .then(([clientResponse, vehicleResponse]) => {
         const client = createClient(clientResponse.data);
@@ -72,7 +72,7 @@ const fetchAndEnrichIntervention = (intervention) => {
 const getInterventions = () => {
   loading.value = true;
 
-  interventionsService.getAllInterventions()
+  interventionsService.getAll()
       .then(response => {
         const interventionData = response.data;
 
@@ -299,12 +299,6 @@ const isActiveFilter = (status) => {
   margin-top: 20px;
   width: 100%;
   overflow-x: auto;
-}
-
-p-datatable-sm {
-  text-align: center;
-  font-weight: bold;
-  padding: 10px;
 }
 
 .loading-indicator {
