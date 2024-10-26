@@ -7,14 +7,6 @@ export class ProductStockService {
         return http.get(`${this.resourceEndpoint}?workshopId=${workshopId}`);
     }
 
-    getById(id){
-        return http.get(`${this.resourceEndpoint}/${id}`);
-    }
-
-    create(data){
-        return http.post(this.resourceEndpoint, data);
-    }
-
     update(id, data){
         return http.put(`${this.resourceEndpoint}/${id}`, data);
     }
