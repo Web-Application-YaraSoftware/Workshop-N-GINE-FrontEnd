@@ -16,6 +16,10 @@ const filters = ref({
 const isDialogVisible = ref(false);
 let selectedRequest = ref();
 let updatedStatus  = ref();
+let dialogTitle = ref();
+let dialogMessage = ref();
+
+
 
 const inventoryService = new ProductRequestService();
 
@@ -38,6 +42,14 @@ function showUpdateDialog(item, newStatus) {
   isDialogVisible.value = true;
   selectedRequest = item;
   updatedStatus = newStatus
+  if(newStatus === 1) {
+    dialogTitle = 'Reject Confirmation';
+    dialogMessage = 'Are you sure you want to reject this request?';
+  }
+  else {
+    dialogTitle = 'Approve Confirmation';
+    dialogMessage = 'Are you sure you want to approve this request?';
+  }
 }
 
 function onConfirm() {
@@ -86,8 +98,8 @@ onMounted(() => {
         </pv-column>
       </pv-datatable>
       <ModelMessageDialog :visible="isDialogVisible"
-                          title="Delete Confirmation"
-                          message="Are you sure you want to delete this request?"
+                          :title="dialogTitle"
+                          :message="dialogMessage"
                           @confirm="onConfirm"
                           @reject="onReject"
                           @update:visible="isDialogVisible = $event"/>
