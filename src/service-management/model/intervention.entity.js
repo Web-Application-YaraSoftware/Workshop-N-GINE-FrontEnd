@@ -1,4 +1,3 @@
-import {Vehicle} from "./vehicle.entity.js";
 import {InterventionType} from "./intervention-type.enum.js";
 import {InterventionState} from "./intervention-state.enum.js";
 
@@ -6,7 +5,8 @@ export class Intervention {
     constructor({
                     id = 0,
                     workshopId = 0,
-                    vehicle = new Vehicle(),
+                    vehicleId = 0,
+                    clientId = 0,
                     mechanicLeaderId = 0,
                     registrationDate = '',
                     completionDate = '',
@@ -16,7 +16,8 @@ export class Intervention {
                 } = {}) {
         this.id = id;
         this.workshopId = workshopId;
-        this.vehicle = vehicle;
+        this.vehicleId = vehicleId;
+        this.clientId = clientId;
         this.mechanicLeaderId = mechanicLeaderId;
         this.registrationDate = registrationDate ? new Date(registrationDate) : new Date();
         this.completionDate = completionDate ? new Date(completionDate) : new Date();
@@ -28,5 +29,9 @@ export class Intervention {
     finish() {
         this.state = InterventionState.COMPLETED;
         this.completionDate = new Date();
+    }
+
+    getFormattedDate() {
+        return this.registrationDate.toLocaleDateString();
     }
 }

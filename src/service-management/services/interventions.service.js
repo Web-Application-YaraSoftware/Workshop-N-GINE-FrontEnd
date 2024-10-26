@@ -13,15 +13,23 @@ export class InterventionsService {
         return http.get(`/interventions`);
     }
 
-    postIntervention(data) {
+    getAllByVehicleId(id) {
+        return http.get(`/interventions?vehicleId=${id}`);
+    }
+
+    getById(id) {
+        return http.get(`/interventions/${id}`);
+    }
+
+    post(data) {
         return http.post('/interventions', data);
     }
 
-    deleteIntervention(id) {
+    delete(id) {
         return http.delete(`/interventions/${id}`);
     }
 
-    putIntervention(id, data) {
+    put(id, data) {
         return http.put(`/interventions/${id}`, data);
     }
 }
