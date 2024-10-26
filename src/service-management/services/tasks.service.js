@@ -1,23 +1,27 @@
 import http from "../../shared/services/http-common.js";
 
 export class TasksService {
-    getAll() {
-        return http.get('/tasks');
+    getAllByInterventionId(id) {
+        return http.get(`/tasks?interventionId=${id}`);
     }
 
     getAllByMechanicId(id) {
         return http.get(`/tasks?assistantId=${id}`);
     }
 
-    postTask(data) {
+    getAllByMechanicIdAndInterventionId(assistantId, interventionId) {
+        return http.get(`/tasks?assistantId=${assistantId}&interventionId=${interventionId}`);
+    }
+
+    post(data) {
         return http.post('/tasks', data);
     }
 
-    deleteTask(id) {
+    delete(id) {
         return http.delete(`/tasks/${id}`);
     }
 
-    putTask(id, data) {
+    put(id, data) {
         return http.put(`/tasks/${id}`, data);
     }
 }
