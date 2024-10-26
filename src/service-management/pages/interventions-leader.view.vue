@@ -1,9 +1,11 @@
 <script setup>
 import {useToast} from "primevue/usetoast";
-import {onMounted, ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 import {FilterMatchMode} from '@primevue/core/api';
 import {InterventionsService} from "../services/interventions.service.js";
+import {ClientsService} from "../../cmr/services/clients.service.js";
 import {Intervention} from "../model/intervention.entity.js";
+import {Client} from "../../cmr/model/client.entity.js";
 import {InterventionType} from "../model/intervention-type.enum.js";
 import {InterventionState} from "../model/intervention-state.enum.js";
 import {useWorkshopStore} from "../../shared/services/workshop-store.js";
@@ -12,6 +14,7 @@ import {useRouter} from "vue-router";
 // Services
 const workshopStore = useWorkshopStore();
 const interventionService = new InterventionsService();
+const clientService = new ClientsService();
 const router = useRouter();
 const toast = useToast();
 // Table configuration
@@ -44,9 +47,20 @@ const statusOptions = [
 ]
 // Data
 const interventions = ref([]);
+const interventionWithClientName = computed(() => {
+  return interventions.value.map(intervention => {
+    const client = clients.value.find(client => client?.id === intervention?.clientId);
+    return {
+      ...intervention,
+      client: client ? client?.fullName : 'Unknown'
+    }
+  });
+});
+const clients = ref([]);
 
 onMounted(() => {
   getInterventions();
+  getClients();
 });
 
 // Methods
@@ -71,6 +85,24 @@ function buildDataFromResponseData(interventions){
   });
 }
 
+function getClients(){
+  clientService.getAllByWorkshop(workshopStore.workshop.id)
+      .then(
+          (response) =>
+          {
+            clients.value = buildClientsDataFromResponseData(response.data);
+          },
+          () =>
+          {
+            toast.add({ severity: 'error', summary: 'Clients not loaded', detail: 'An error occurred while loading clients data', life: 3000 })
+          }
+      );
+}
+
+function buildClientsDataFromResponseData(clients){
+  return clients.map(client => new Client(client));
+}
+
 // Events
 function onRowSelect(data){
   workshopStore.setLeader();
@@ -82,7 +114,7 @@ function onRowSelect(data){
 <template>
   <section class="assistants">
     <pv-datatable
-        :value="interventions"
+        :value="interventionWithClientName"
         removableSort
         v-model:filters="filters"
         paginator
@@ -117,14 +149,9 @@ function onRowSelect(data){
           {{data.id}}
         </template>
       </pv-column>
-      <pv-column field="vehicle.owner.firstName" filterField="vehicle.owner.firstName" header="Client" sortable>
+      <pv-column field="client" filterField="client" header="Client" sortable>
         <template #body="{ data }">
-          {{data.vehicle.owner.firstName}} {{data.vehicle.owner.lastName}}
-        </template>
-      </pv-column>
-      <pv-column field="vehicle.licensePlate" filterField="vehicle.licensePlate" header="Vehicle" sortable>
-        <template #body="{ data }">
-          {{data.vehicle.licensePlate}}
+          {{ data.client }}
         </template>
       </pv-column>
       <pv-column field="registrationDate" filterField="registrationDate" header="Date" sortable>
