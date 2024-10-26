@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue';
-import { ClientsService } from '../services/clients.service.js';
-import { VehiclesService } from '../services/vehicles.service.js';
+import { ClientsService } from '../../cmr/services/clients.service.js';
+import { VehiclesService } from '../../cmr/services/vehicles.service.js';
 
 const visible = ref(false);
 const clientsService = new ClientsService();
@@ -46,12 +46,12 @@ const submitForm = () => {
 const fetchClientByDni = async () => {
   if (clientDni.value) {
     try {
-      const clientResponse = await clientsService.getClientByDocument(clientDni.value);
+      const clientResponse = await clientsService.getByDocument(clientDni.value);
       const client = clientResponse.data[0];
       newIntervention.value.clientId = client.id;
 
       // Fetch the vehicles owned by this client
-      const vehiclesResponse = await vehiclesService.getCarsByOwner(client.id);
+      const vehiclesResponse = await vehiclesService.getByClientId(client.id);
       clientVehicles.value = vehiclesResponse.data;
     } catch (error) {
       console.error('Error fetching client or vehicles:', error);

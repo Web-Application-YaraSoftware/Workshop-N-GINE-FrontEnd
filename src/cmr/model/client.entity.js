@@ -1,8 +1,8 @@
-import {User} from "../../iam/model/user.entity.js";
-import {AccountState} from "../../iam/model/account-state.enum.js";
-import {Role} from "../../iam/model/role.enum.js";
+import { User } from "../../iam/model/user.entity.js";
+import { AccountState } from "../../iam/model/account-state.enum.js";
+import { Role } from "../../iam/model/role.enum.js";
 
-export class Mechanic extends User{
+export class Client extends User {
     constructor({
                     id = 0,
                     workshop_id = 0,
@@ -15,8 +15,8 @@ export class Mechanic extends User{
                     age = 0,
                     location = '',
                     state = AccountState.ACTIVE,
-                    role = Role.MECHANIC
-    } = {}) {
+                    role = Role.CLIENT
+                } = {}) {
         super({
             id: id,
             workshop_id: workshop_id,

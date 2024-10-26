@@ -7,6 +7,9 @@ import App from './App.vue'
 //Toast service
 import ToastService from 'primevue/toastservice';
 
+//ConfirmDialog service
+import ConfirmationService from 'primevue/confirmationservice';
+
 // Router
 import router from "./router/index.js";
 
@@ -30,6 +33,7 @@ import FloatLabel from "primevue/floatlabel";
 import IconField from "primevue/iconfield";
 import InputIcon from 'primevue/inputicon';
 import InputGroup from "primevue/inputgroup";
+import InputGroupAddon from "primevue/inputgroupaddon";
 import InputMask from "primevue/inputmask";
 import InputNumber from "primevue/inputnumber";
 import InputText from "primevue/inputtext";
@@ -39,6 +43,7 @@ import Select from "primevue/select";
 import Textarea from "primevue/textarea";
 import ToggleSwitch from "primevue/toggleswitch";
 import Button from "primevue/button";
+import ButtonGroup from "primevue/buttongroup";
 import SpeedDial from "primevue/speeddial";
 import DataTable from "primevue/datatable";
 import Column from 'primevue/column';
@@ -49,7 +54,14 @@ import Card from "primevue/card";
 import Panel from "primevue/panel";
 import ScrollPanel from "primevue/scrollpanel";
 import Stepper from "primevue/stepper";
+import StepList from "primevue/steplist";
+import Step from "primevue/step";
+import StepItem from "primevue/stepitem";
+import StepPanels from "primevue/steppanels";
+import StepPanel from "primevue/steppanel";
 import Tabs from "primevue/tabs";
+import TabList from "primevue/tablist";
+import Tab from "primevue/tab";
 import Toolbar from "primevue/toolbar";
 import ConfirmDialog from "primevue/confirmdialog";
 import Dialog from "primevue/dialog";
@@ -61,8 +73,8 @@ import Toast from "primevue/toast";
 import Image from "primevue/image";
 import Avatar from "primevue/avatar";
 import Badge from "primevue/badge";
-import DatePicker from "primevue/datepicker";
-import TextArea from "primevue/textarea";
+import Tag from "primevue/tag";
+import Popover from 'primevue/popover';
 
 // My design preset
 const MyPreset = definePreset(Aura, {
@@ -127,7 +139,7 @@ app.use(PrimeVue, {
     theme: {
         preset: MyPreset,
         options: {
-            darkModeSelector: 'system',
+            darkModeSelector: 'light',
         }
     },
 });
@@ -141,6 +153,7 @@ app.component('pv-autocomplete', AutoComplete)
     .component('pv-iconfield', IconField)
     .component('pv-inputicon', InputIcon)
     .component('pv-inputgroup', InputGroup)
+    .component('pv-inputgroupaddon', InputGroupAddon)
     .component('pv-inputmask', InputMask)
     .component('pv-inputnumber', InputNumber)
     .component('pv-inputtext', InputText)
@@ -150,6 +163,7 @@ app.component('pv-autocomplete', AutoComplete)
     .component('pv-textarea', Textarea)
     .component('pv-toggleswitch', ToggleSwitch)
     .component('pv-button', Button)
+    .component('pv-buttongroup', ButtonGroup)
     .component('pv-speeddial', SpeedDial)
     .component('pv-datatable', DataTable)
     .component('pv-column', Column)
@@ -160,7 +174,14 @@ app.component('pv-autocomplete', AutoComplete)
     .component('pv-panel', Panel)
     .component('pv-scrollpanel', ScrollPanel)
     .component('pv-stepper', Stepper)
+    .component('pv-steplist', StepList)
+    .component('pv-step', Step)
+    .component('pv-stepitem', StepItem)
+    .component('pv-steppanels', StepPanels)
+    .component('pv-steppanel', StepPanel)
     .component('pv-tabs', Tabs)
+    .component('pv-tablist', TabList)
+    .component('pv-tab', Tab)
     .component('pv-toolbar', Toolbar)
     .component('pv-confirmdialog', ConfirmDialog)
     .component('pv-dialog', Dialog)
@@ -171,10 +192,18 @@ app.component('pv-autocomplete', AutoComplete)
     .component('pv-toast', Toast)
     .component('pv-image', Image)
     .component('pv-avatar', Avatar)
-    .component('pv-badge', Badge);
+    .component('pv-badge', Badge)
+    .component('pv-tag', Tag)
+    .component('pv-popover', Popover);
+
+// Use Tooltip
+app.directive('tooltip', Tooltip);
 
 // Use Toast Service
 app.use(ToastService);
+
+// Use ConfirmDialog Service
+app.use(ConfirmationService);
 
 // Use Pinia
 app.use(createPinia());

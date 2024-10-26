@@ -1,10 +1,9 @@
 import http from "../../shared/services/http-common.js";
 
-export class ProductRequestService {
+export class CheckpointService {
     constructor() {
-        this.resourceEndpoint = '/products-request';
+        this.resourceEndpoint = '/checkpoints';
     }
-
     getAllByTaskId(taskId) {
         return http.get(`${this.resourceEndpoint}?taskId=${taskId}`);
     }

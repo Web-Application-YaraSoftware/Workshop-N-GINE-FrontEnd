@@ -1,8 +1,8 @@
 import http from "../../shared/services/http-common.js";
 
 export class PersonnelService {
-    getAllPersonnel() {
-        return http.get('/users?workshop_id=1&user_type.id=2');
+    getAllPersonnel(workshopId) {
+        return http.get(`/mechanics?workshop.id=${workshopId}`);
     }
 
     postPersonnel(data) {

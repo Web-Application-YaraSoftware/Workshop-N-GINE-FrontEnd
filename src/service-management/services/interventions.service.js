@@ -1,19 +1,35 @@
 import http from "../../shared/services/http-common.js";
 
 export class InterventionsService {
-    getAllInterventions() {
+    getAll() {
         return http.get('/interventions');
     }
 
-    postIntervention(data) {
+    getAllByMechanicLeaderId(id) {
+        return http.get(`/interventions?mechanicLeaderId=${id}`);
+    }
+
+    getAllByMechanicAssistantId(id) {
+        return http.get(`/interventions`);
+    }
+
+    getAllByVehicleId(id) {
+        return http.get(`/interventions?vehicleId=${id}`);
+    }
+
+    getById(id) {
+        return http.get(`/interventions/${id}`);
+    }
+
+    post(data) {
         return http.post('/interventions', data);
     }
 
-    deleteIntervention(id) {
+    delete(id) {
         return http.delete(`/interventions/${id}`);
     }
 
-    putIntervention(id, data) {
+    put(id, data) {
         return http.put(`/interventions/${id}`, data);
     }
 }

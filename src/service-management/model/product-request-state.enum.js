@@ -2,17 +2,16 @@ export const ProductRequestState = Object.freeze({
     PENDING: 0,
     REJECTED: 1,
     APPROVED: 2,
-
-    getName(value) {
-        switch (value) {
-            case this.PENDING:
+    getName(state) {
+        switch (state) {
+            case 0:
                 return 'Pending';
-            case this.REJECTED:
+            case 1:
                 return 'Rejected';
-            case this.APPROVED:
+            case 2:
                 return 'Approved';
             default:
-                return null;
+                return 'Unknown';
         }
     }
 });
