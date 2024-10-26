@@ -1,7 +1,7 @@
 <script setup>
 import NewClientDialog from "../components/new-client-dialog.component.vue";
 import ModelMessageDialog from "../../shared/components/model-message-dialog.component.vue";
-import {ClientService} from "../services/client.service.js";
+import {ClientsService} from "../services/clients.service.js";
 import {onMounted, ref, provide} from "vue";
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
@@ -28,7 +28,7 @@ provide('dialogVisibility',{
 
 //Services
 const workshopStore = useWorkshopStore();
-const clientService = new ClientService();
+const clientService = new ClientsService();
 const toast = useToast();
 
 //Api Requests
