@@ -6,10 +6,12 @@ import { InterventionsService } from "../../cmr/services/intervention.service.js
 import { PersonnelService } from "../services/personnel.service.js";
 import { VehicleService } from "../../cmr/services/vehicle.service.js";
 import { TaskService } from "../services/task.service.js";
+import { ClientService} from "../../cmr/services/client.service.js";
 import { Intervention } from "../model/intervention.entity.js";
 import { useToast } from 'primevue/usetoast';
 import { Mechanic } from '../model/mechanic.entity.js';
 import { Vehicle } from '../model/vehicle.entity.js';
+import { Client } from "../../cmr/model/client.entity.js";
 import { Task } from '../model/task.entity.js';
 import GeneralInformation from "../components/general-information.component.vue";
 import InterventionSummary from "../components/intervention-summary.component.vue";
@@ -18,14 +20,15 @@ const route = useRoute();
 const toast = useToast();
 
 const intervention = ref(new Intervention());
+const client = ref();
 const mechanics = ref([]);
 const vehicles = ref([]);
 const tasks = ref([]);
-const isOwner = ref(true);
 const currentView = ref('generalInformation');
 
 const interventionsService = new InterventionsService();
 const personnelService = new PersonnelService();
+const clientService = new ClientService();
 const vehicleService = new VehicleService();
 const taskService = new TaskService();
 
@@ -37,12 +40,29 @@ function loadIntervention() {
   interventionsService.getById(interventionId)
       .then(response => {
         intervention.value = new Intervention(response.data);
-        loadVehicles(intervention.value.vehicle.owner.dni); // Load vehicles after intervention
+        loadVehicles(intervention.value.clientId);
+        loadClient(intervention.value.clientId);
         showGeneralInformation();
       })
       .catch(err => {
         toast.add({ severity: 'error', summary: 'Error loading intervention', detail: err.message });
       });
+}
+
+function loadClient(clientId){
+  clientService.getById(clientId)
+      .then(
+          (response) => {
+            client.value = buildClientFromResponseData(response.data);
+          },
+          (error) => {
+            console.error(error);
+          }
+      );
+}
+
+function buildClientFromResponseData(data) {
+  return new Client(data);
 }
 
 function loadPersonnel() {
@@ -56,8 +76,8 @@ function loadPersonnel() {
       });
 }
 
-function loadVehicles(clientDni) {
-  vehicleService.getByClientDni(clientDni)
+function loadVehicles(clientId) {
+  vehicleService.getByClientId(clientId)
       .then(response => {
         vehicles.value = response.data.map(vehicle => new Vehicle(vehicle));
       })
@@ -130,11 +150,12 @@ onMounted(() => {
           <general-information
               v-if="currentView === 'generalInformation'"
               :intervention="intervention"
+              :client="client"
+              :clientVehicles="vehicles"
               :mechanics="mechanics"
-              :vehicles="vehicles"
-              :isOwner="isOwner"
-              @updateIntervention="updateIntervention"
+              @update:intervention="updateIntervention"
           />
+
           <intervention-summary
               v-if="currentView === 'interventionSummary'"
               :tasks="tasks"
