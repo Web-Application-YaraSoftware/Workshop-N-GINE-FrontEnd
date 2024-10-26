@@ -6,7 +6,7 @@ import { VehicleService } from "../services/vehicle.service.js";
 import ConfirmationDialog from "../../shared/components/confirmation-dialog.component.vue";
 import NewVehicleDialog from "../components/new-vehicle-dialog.component.vue";
 import VehicleItem from "../components/vehicle-item.component.vue";
-import { WorkshopClient } from "../model/workshop-client.entity.js";
+import { Client } from "../model/client.entity.js";
 import { Vehicle } from "../../service-management/model/vehicle.entity.js";
 
 //Router and services
@@ -17,7 +17,7 @@ const vehicleService = new VehicleService();
 
 //Reactive state
 const clientId = ref(0);
-const workshopClient = ref(new WorkshopClient());
+const workshopClient = ref(new Client());
 const vehicles = ref([]);
 
 //Dialog states
@@ -40,7 +40,7 @@ function loadClientIdFromRoute() {
 function loadClientData() {
   if (clientId.value) {
     workshopClientService.getById(clientId.value).then(client => {
-      workshopClient.value = client;
+      workshopClient.value = new Client(client);
     });
   }
 }
@@ -103,7 +103,7 @@ function onDismiss() {
 }
 
 function viewVehicleDetail(vehicle) {
-  router.push(`/vehicles/${vehicle.id}`);
+  router.push(`/vehicle/${vehicle.id}`);
 }
 
 onMounted(() => {
