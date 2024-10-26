@@ -5,7 +5,7 @@ import {ClientService} from "../services/client.service.js";
 import {onMounted, ref, provide} from "vue";
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
-import {User} from "../model/user.entity.js";
+import {User} from "../../iam/model/user.entity.js";
 import {useWorkshopStore} from "../../shared/services/workshop-store.js";
 
 //Clients
