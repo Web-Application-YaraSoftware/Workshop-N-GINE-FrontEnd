@@ -4,7 +4,7 @@ export class ProductRequestService {
     constructor() {
         this.resourceEndpoint = '/products-request';
     }
-
+  
     getAllByTaskId(taskId) {
         return http.get(`${this.resourceEndpoint}?taskId=${taskId}`);
     }
@@ -20,4 +20,14 @@ export class ProductRequestService {
     put(id, data) {
         return http.put(`${this.resourceEndpoint}/${id}`, data);
     }
+  
+    getAllByWorkshopId(workshopId){
+        return http.get(`${this.resourceEndpoint}?workshopId=${workshopId}&status=0`);
+    }
+
+    updateRequests(request, newStatus) {
+        const updateData = { status: newStatus };
+        return http.patch(`${this.resourceEndpoint}/${request.id}`, updateData);
+    }
+  
 }
