@@ -1,6 +1,6 @@
 <script setup>
 import {ref} from 'vue';
-import {Vehicle} from "../../service-management/model/vehicle.entity.js";
+import {Vehicle} from "../model/vehicle.entity.js";
 
 const dialogVisible = ref(true);
 const vehicle = ref(new Vehicle());

@@ -10,6 +10,7 @@ export class ClientsService {
     getById(id) {
         return http.get(`${this.resourceEndpoint}/${id}`);
     }
+
     getByDocument(dni) {
         return http.get(`${this.resourceEndpoint}?dni=${dni}`);
     }

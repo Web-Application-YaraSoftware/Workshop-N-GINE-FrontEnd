@@ -27,13 +27,13 @@ provide('dialogVisibility',{
 });
 
 //Services
-const workshopStore = useWorkshopStore();
+const workshopStore = useWorkshopStore()
 const clientService = new ClientsService();
 const toast = useToast();
 
 //Api Requests
 function getClients(){
-  clientService.getAllByWorkshop(1)
+  clientService.getAllByWorkshop(workshopStore.workshop?.id)
       .then(response => {
         clients.value = buildClientListFromResponseData(response.data);
       });
@@ -196,7 +196,7 @@ onMounted(() => {
             <router-link
                 :to="{ name: 'client-details', params: { id: slotProps.data.id } }"
                 class="ml-2 text-white no-underline hover:underline">
-              {{slotProps.data.firstName}} {{slotProps.data.lastName}}
+              {{slotProps.data.first_name}} {{slotProps.data.last_name}}
             </router-link>
           </template>
         </pv-column>
