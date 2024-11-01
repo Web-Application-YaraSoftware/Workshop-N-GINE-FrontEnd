@@ -1,11 +1,11 @@
 <script setup>
 import NewClientDialog from "../components/new-client-dialog.component.vue";
 import ModelMessageDialog from "../../shared/components/model-message-dialog.component.vue";
-import {ClientService} from "../services/client.service.js";
+import {ClientsService} from "../services/clients.service.js";
 import {onMounted, ref, provide} from "vue";
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
-import {User} from "../model/user.entity.js";
+import {User} from "../../iam/model/user.entity.js";
 import {useWorkshopStore} from "../../shared/services/workshop-store.js";
 
 //Clients
@@ -27,13 +27,13 @@ provide('dialogVisibility',{
 });
 
 //Services
-const workshopStore = useWorkshopStore();
-const clientService = new ClientService();
+const workshopStore = useWorkshopStore()
+const clientService = new ClientsService();
 const toast = useToast();
 
 //Api Requests
 function getClients(){
-  clientService.getAllByWorkshop(1)
+  clientService.getAllByWorkshop(workshopStore.workshop?.id)
       .then(response => {
         clients.value = buildClientListFromResponseData(response.data);
       });
@@ -196,7 +196,7 @@ onMounted(() => {
             <router-link
                 :to="{ name: 'client-details', params: { id: slotProps.data.id } }"
                 class="ml-2 text-white no-underline hover:underline">
-              {{slotProps.data.firstName}} {{slotProps.data.lastName}}
+              {{slotProps.data.first_name}} {{slotProps.data.last_name}}
             </router-link>
           </template>
         </pv-column>
