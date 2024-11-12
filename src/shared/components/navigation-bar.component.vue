@@ -3,7 +3,9 @@ import {reactive} from "vue";
 import {useWorkshopStore} from "../services/workshop-store.js";
 
 const workshopStore = useWorkshopStore();
+
 const navigationItems = reactive([
+    /*
   {
     name: 'Personnel',
     rutaName: 'personnel',
@@ -51,6 +53,7 @@ const navigationItems = reactive([
     rutaName: 'notifications',
     isPublic: true
   }
+     */
 ]);
 
 </script>
