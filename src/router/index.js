@@ -17,7 +17,7 @@ const router = createRouter({
                 {
                     path: 'clients',
                     name: 'clients',
-                    component: () => import('../cmr/pages/client-list.component.vue')
+                    component: () => import('../service-management/pages/client-list.component.vue')
                 },
                 {
                     path: 'clients/:id',
