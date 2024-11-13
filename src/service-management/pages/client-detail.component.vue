@@ -1,13 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { WorkshopClientService } from "../services/workshop-client.service.js";
-import { VehicleService } from "../services/vehicle.service.js";
+import { WorkshopClientService } from "../../cmr/services/workshop-client.service.js";
+import { VehicleService } from "../../cmr/services/vehicle.service.js";
 import ConfirmationDialog from "../../shared/components/confirmation-dialog.component.vue";
 import NewVehicleDialog from "../components/new-vehicle-dialog.component.vue";
 import VehicleItem from "../components/vehicle-item.component.vue";
-import { Client } from "../model/client.entity.js";
-import { Vehicle } from "../model/vehicle.entity.js";
+import { Client } from "../../cmr/model/client.entity.js";
+import { Vehicle } from "../../cmr/model/vehicle.entity.js";
 
 //Router and services
 const router = useRouter();
