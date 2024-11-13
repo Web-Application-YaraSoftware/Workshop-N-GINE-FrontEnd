@@ -3,10 +3,10 @@ import http from "../../shared/services/http-common.js";
 export class VehicleService {
     resourceEndpoint = '/vehicles';
 
-    getByClientId(clientId) {
+    getByUserId(userId) {
         return http.get(this.resourceEndpoint, {
             params: {
-                'clientId': clientId
+                'userId': userId
             }
         });
     }
@@ -22,7 +22,7 @@ export class VehicleService {
             }
         });
     }
-    create(data) {
+    postVehicle(data) {
         return http.post(this.resourceEndpoint, data);
     }
 }

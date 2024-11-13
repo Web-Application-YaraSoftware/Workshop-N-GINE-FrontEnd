@@ -22,7 +22,7 @@ const router = createRouter({
                 {
                     path: 'clients/:id',
                     name: 'client-details',
-                    component: () => import('../cmr/pages/client-detail.component.vue')
+                    component: () => import('../service-management/pages/client-detail.component.vue')
                 },
                 {
                     path: 'interventions',
@@ -97,12 +97,12 @@ const router = createRouter({
                 {
                     path: 'vehicles/:carOwnerId',
                     name: 'vehicles',
-                    component: () => import('../cmr/pages/vehicle-list.component.vue')
+                    component: () => import('../service-management/pages/vehicle-list.component.vue')
                 },
                 {
                     path: 'vehicle/:carId',
                     name: 'vehicle-details',
-                    component: () => import('../cmr/pages/vehicle-detail.component.vue')
+                    component: () => import('../service-management/pages/vehicle-detail.component.vue')
                 },
             ]
         },

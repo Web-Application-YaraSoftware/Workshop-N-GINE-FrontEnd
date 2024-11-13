@@ -4,18 +4,16 @@ export class Vehicle {
                     licensePlate = '',
                     brand = '',
                     model = '',
-                    clientId = 0,
+                    image = '',
+                    userId = 0,
                     iotDeviceId = 0
                 } = {}) {
         this.id = id;
         this.licensePlate = licensePlate;
         this.brand = brand;
         this.model = model;
-        this.clientId = clientId;
+        this.image = image;
+        this.userId = userId;
         this.iotDeviceId = iotDeviceId;
-    }
-
-    get fullName() {
-        return `${this.brand} ${this.model}`;
     }
 }

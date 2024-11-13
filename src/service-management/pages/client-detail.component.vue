@@ -1,52 +1,53 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { WorkshopClientService } from "../services/workshop-client.service.js";
-import { VehicleService } from "../services/vehicle.service.js";
+import {ref, onMounted} from 'vue';
+import {useRouter, useRoute} from 'vue-router';
+import {ProfilesService} from "../../profile-management/services/profiles.service.js";
+import {VehicleService} from "../services/vehicle.service.js";
 import ConfirmationDialog from "../../shared/components/confirmation-dialog.component.vue";
 import NewVehicleDialog from "../components/new-vehicle-dialog.component.vue";
 import VehicleItem from "../components/vehicle-item.component.vue";
-import { Client } from "../model/client.entity.js";
-import { Vehicle } from "../model/vehicle.entity.js";
+import {Vehicle} from "../model/vehicle.entity.js";
+import {Profile} from "../../profile-management/model/profile.entity.js";
 
 //Router and services
 const router = useRouter();
 const route = useRoute();
-const workshopClientService = new WorkshopClientService();
+const profileService = new ProfilesService();
 const vehicleService = new VehicleService();
 
 //Reactive state
-const clientId = ref(0);
-const workshopClient = ref(new Client());
+const userId = ref(0);
+const workshopClient = ref(new Profile());
 const vehicles = ref([]);
 
 //Dialog states
 const confirmationMessage = ref('');
 const showConfirmationDialog = ref(false);
-const onConfirmAction = ref(() => {});
+const onConfirmAction = ref(() => {
+});
 const showNewVehicleDialog = ref(false);
 const newVehicle = ref(new Vehicle());
 
 function initializeComponent() {
-  loadClientIdFromRoute();
+  loadUserIdFromRoute();
   loadClientData();
   loadVehiclesData();
 }
 
-function loadClientIdFromRoute() {
-  clientId.value = route.params.id || 0;
+function loadUserIdFromRoute() {
+  userId.value = route.params.id || 0;
 }
 
 function loadClientData() {
-  if (clientId.value) {
-    workshopClientService.getById(clientId.value).then(client => {
-      workshopClient.value = new Client(client);
+  if (userId.value) {
+    profileService.getById(userId.value).then(client => {
+      workshopClient.value = new Profile(client.data);
     });
   }
 }
 
 function loadVehiclesData() {
-  vehicleService.getByClientId(clientId.value).then(response => {
+  vehicleService.getByUserId(userId.value).then(response => {
     const vehiclesData = response.data;
     vehicles.value = createVehicleListFromResponseData(vehiclesData);
   }).catch(error => {
@@ -64,17 +65,19 @@ function startVehicleRegistration() {
 }
 
 function registerNewVehicle(vehicle) {
-  vehicle.owner = workshopClient.value;
-  vehicleService.create(vehicle).then(() => {
+  vehicle.userId = userId.value;
+  vehicleService.postVehicle(vehicle).then(() => {
     loadVehiclesData();
     showNewVehicleDialog.value = false;
+  }).catch(error => {
+    console.error('Error creating vehicle:', error);
   });
 }
 
 function updateClient() {
   confirmationMessage.value = 'Are you sure you want to update this client?';
   onConfirmAction.value = () => {
-    workshopClientService.update(clientId.value, workshopClient.value).then(() => {
+    profileService.putProfile(clientId.value, workshopClient.value).then(() => {
       loadClientData();
     });
   };
@@ -82,9 +85,10 @@ function updateClient() {
 }
 
 function deleteClient() {
+  //TODO: Implement delete client
   confirmationMessage.value = 'Are you sure you want to delete this client?';
   onConfirmAction.value = () => {
-    workshopClientService.delete(clientId.value).then(() => {
+    profileService.delete(clientId.value).then(() => {
       router.push('/clients');
     });
   };
@@ -126,12 +130,6 @@ onMounted(() => {
           <pv-floatlabel>
             <pv-inputtext id="lastName" class="full-width" v-model="workshopClient.lastName"/>
             <label for="lastName">Last Name</label>
-          </pv-floatlabel>
-
-          <pv-floatlabel>
-            <pv-select id="documentType" class="full-width" v-model="workshopClient.documentType"
-                       :options="['passport', 'id', 'driver-license']"/>
-            <label for="documentType">Document Type</label>
           </pv-floatlabel>
 
           <pv-floatlabel>

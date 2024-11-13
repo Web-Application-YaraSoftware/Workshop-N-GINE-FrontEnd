@@ -42,6 +42,20 @@ function onCancel() {
         </pv-floatlabel>
       </div>
 
+      <div class="p-field">
+        <pv-floatlabel>
+          <label for="image">Image URL</label>
+          <pv-inputtext id="image" v-model="vehicle.image" required/>
+        </pv-floatlabel>
+      </div>
+
+      <div class="p-field">
+        <pv-floatlabel>
+          <label for="iot-device-id">IoT Device ID</label>
+          <pv-inputnumber id="iot-device-id" v-model="vehicle.iotDeviceId" required/>
+        </pv-floatlabel>
+      </div>
+
       <div class="p-dialog-footer">
         <pv-button label="Create" icon="pi pi-check" class="p-button-primary" @click="onSave"/>
         <pv-button label="Cancel" icon="pi pi-times" class="p-button-danger" @click="onCancel"/>

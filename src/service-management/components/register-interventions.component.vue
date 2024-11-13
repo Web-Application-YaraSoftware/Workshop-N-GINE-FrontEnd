@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { useRouter } from 'vue-router';
+import {ref, onMounted, onBeforeUnmount} from 'vue';
+import {useRouter} from 'vue-router';
 import {InterventionState} from "../model/intervention-state.enum.js";
 import {InterventionType} from "../model/intervention-type.enum.js";
 
@@ -9,6 +9,10 @@ const props = defineProps({
     type: Array,
     required: true,
     default: []
+  },
+  isPanelActive: {
+    type: Boolean,
+    default: true
   }
 });
 const getStatusSeverity = (status) => {
@@ -59,11 +63,11 @@ function onRedirectToIntervention(interventionId) {
               <pv-tag class="status" :severity="getStatusSeverity(slotProps.item.state)">
                 {{ InterventionState.getName(slotProps.item.state) }}
               </pv-tag>
-              <p class="date">{{slotProps.item.getFormattedDate()}}</p>
+              <p class="date">{{ slotProps.item.getFormattedDate() }}</p>
             </div>
           </template>
           <template #content>
-            <p class="type">{{ InterventionType.getName(slotProps.item.interventionType )}}</p>
+            <p class="type">{{ InterventionType.getName(slotProps.item.interventionType) }}</p>
           </template>
           <template #footer>
             <pv-button label="Read more" class="read-more-button" @click="onRedirectToIntervention(slotProps.item.id)"/>
@@ -100,10 +104,12 @@ function onRedirectToIntervention(interventionId) {
   align-items: center;
   flex-direction: column;
   gap: 1rem;
-  .status{
+
+  .status {
     width: fit-content;
   }
-  .date{
+
+  .date {
     color: #7f8c8d;
   }
 }

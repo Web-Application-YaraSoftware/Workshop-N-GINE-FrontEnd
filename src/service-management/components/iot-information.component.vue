@@ -1,6 +1,6 @@
 <script setup>
-import {IoTDevice} from "../model/iot-device.entity.js";
-import {CodeState} from "../model/code-state.enum.js";
+import {IoTDevice} from "../../cmr/model/iot-device.entity.js";
+import {CodeState} from "../../cmr/model/code-state.enum.js";
 import {nextTick, ref} from "vue";
 
 const props = defineProps({

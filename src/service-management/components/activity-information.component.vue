@@ -1,6 +1,6 @@
 <script setup>
 import RegisterInterventions from "./register-interventions.component.vue";
-import IotInformation from "../../cmr/components/iot-information.component.vue";
+import IotInformation from "./iot-information.component.vue";
 import GeneralInformation from "./general-information.component.vue";
 import {Intervention} from "../model/intervention.entity.js";
 import {IoTDevice} from "../../cmr/model/iot-device.entity.js";

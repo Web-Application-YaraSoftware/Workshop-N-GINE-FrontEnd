@@ -5,6 +5,10 @@ export class ProfilesService {
         return http.get(`/profiles/${userId}`);
     }
 
+    getById(profileId) {
+        return http.get(`/profiles/${profileId}`);
+    }
+
     postProfile(data) {
         return http.post('/profiles', data);
     }

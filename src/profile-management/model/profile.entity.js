@@ -7,8 +7,8 @@ export class Profile {
                     email = '',
                     age = 0,
                     location = '',
-                    userId = 0
-    } = {}) {
+                    userId = 0,
+                } = {}) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -17,5 +17,9 @@ export class Profile {
         this.age = age;
         this.location = location;
         this.userId = userId;
+    }
+
+    get fullName() {
+        return `${this.firstName} ${this.lastName}`;
     }
 }
