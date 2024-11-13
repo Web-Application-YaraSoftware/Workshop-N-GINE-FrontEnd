@@ -7,7 +7,7 @@ import ConfirmationDialog from "../../shared/components/confirmation-dialog.comp
 import NewVehicleDialog from "../components/new-vehicle-dialog.component.vue";
 import VehicleItem from "../components/vehicle-item.component.vue";
 import { Client } from "../model/client.entity.js";
-import { Vehicle } from "../model/vehicle.entity.js";
+import { Vehicle } from "../../service-management/model/vehicle.entity.js";
 
 //Router and services
 const router = useRouter();

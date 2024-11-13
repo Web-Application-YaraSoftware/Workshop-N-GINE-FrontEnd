@@ -1,5 +1,4 @@
 import {createRouter, createWebHistory} from "vue-router";
-import {useAuthStore} from "../iam/services/auth-store.js";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -12,15 +11,15 @@ const router = createRouter({
                 {
                     path: 'personnel',
                     name: 'personnel',
-                    component: () => import('../service-management/pages/personnel.view.vue')
+                    component: () => import('../service-management/pages/personnel-list.component.vue')
                 },
                 {
                     path: 'clients',
                     name: 'clients',
-                    component: () => import('../service-management/pages/client-list.component.vue')
+                    component: () => import('../cmr/pages/client-list.component.vue')
                 },
                 {
-                    path: 'clients/:id',
+                    path: 'client/:id',
                     name: 'client-details',
                     component: () => import('../cmr/pages/client-detail.component.vue')
                 },
@@ -72,27 +71,57 @@ const router = createRouter({
                     component: () => import('../communication-management/pages/notification-list.component.vue')
                 },
                 {
-                    path: 'activities',
-                    name: 'activities',
-                    redirect: {name: 'assistant'},
-                    component: () => import('../service-management/components/activities-header.component.vue'),
-                    children: [
-                        {
-                            path: 'assistant',
-                            name: 'assistant',
-                            component: () => import('../service-management/pages/interventions-assistant.view.vue')
-                        },
-                        {
-                            path: 'leader',
-                            name: 'leader',
-                            component: () => import('../service-management/pages/interventions-leader.view.vue')
-                        }
-                    ]
+                    path: 'tasks',
+                    name: 'tasks',
+                    component: () => import('../service-management/pages/task-list.component.vue')
                 },
                 {
-                    path: 'activities/:id',
-                    name: 'activity-details',
-                    component: () => import('../service-management/pages/activity.view.vue')
+                    path: 'task/:taskId',
+                    name: 'task-details',
+                    redirect: {name: 'task-information'},
+                    component: () => import('../service-management/components/step-list.component.vue'),
+                    children: [
+                        {
+                            path: 'information',
+                            name: 'task-information',
+                            component: () => import('../service-management/pages/task-information.component.vue')
+                        },
+                        {
+                            path: 'diagnostic-preparation',
+                            name: 'task-diagnostic-preparation',
+                            component: () => import('../service-management/pages/task-diagnostic-preparation.component.vue')
+                        },
+                        {
+                            path: 'execution',
+                            name: 'task-execution',
+                            component: () => import('../service-management/components/related-task-list.component.vue'),
+                            children: [
+                                {
+                                    path: 'internal-task/:internalTaskId',
+                                    name: 'internal-task-details',
+                                    redirect: {name: 'internal-task-requests'},
+                                    component: () => import('../service-management/components/internal-task-header.component.vue'),
+                                    children: [
+                                        {
+                                            path: 'requests',
+                                            name: 'internal-task-requests',
+                                            component: () => import('../service-management/pages/task-requests.component.vue')
+                                        },
+                                        {
+                                            path: 'tracking',
+                                            name: 'internal-task-tracking',
+                                            component: () => import('../service-management/pages/task-tracking.component.vue')
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            path: 'monitoring',
+                            name: 'task-monitoring',
+                            component: () => import('../service-management/pages/task-monitoring.component.vue')
+                        }
+                    ]
                 },
                 {
                     path: 'vehicles/:carOwnerId',
@@ -123,14 +152,5 @@ const router = createRouter({
         }
     ]
 });
-
-/*router.beforeEach((to, from, next) => {
-    const authStore = useAuthStore();
-    if (to.name !== 'login' && to.name !== 'register' && !authStore.isAuthenticated) {
-        next({name: 'login'});
-    } else {
-        next();
-    }
-});*/
 
 export default router;

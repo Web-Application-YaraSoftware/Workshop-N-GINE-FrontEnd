@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <h1>Stock- Requests</h1>
+  <h1>Por requested - tracking</h1>
   <router-view/>
 </template>
 

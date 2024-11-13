@@ -1,6 +1,6 @@
 <script setup>
 import {ref, defineProps, defineEmits} from 'vue';
-import {Vehicle} from "../model/vehicle.entity.js";
+import {Vehicle} from "../../service-management/model/vehicle.entity.js";
 
 const props = defineProps({
   vehicle: Vehicle,

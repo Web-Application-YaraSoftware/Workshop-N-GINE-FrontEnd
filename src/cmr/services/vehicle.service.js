@@ -6,7 +6,7 @@ export class VehicleService {
     getByClientId(clientId) {
         return http.get(this.resourceEndpoint, {
             params: {
-                'clientId': clientId
+                'owner.id': clientId
             }
         });
     }

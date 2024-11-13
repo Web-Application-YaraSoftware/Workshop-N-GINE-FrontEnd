@@ -3,8 +3,7 @@
 </script>
 
 <template>
-  <h1>Stock- Requests</h1>
-  <router-view/>
+  <h1>Task Information</h1>
 </template>
 
 <style scoped>

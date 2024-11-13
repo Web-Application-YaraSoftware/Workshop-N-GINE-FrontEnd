@@ -31,12 +31,12 @@ const props = defineProps({
 const emit = defineEmits(['update:intervention']);
 const workshopStore = useWorkshopStore();
 const isNotAvailable = ref(false);
-const areThereChanges = computed(() =>{
-    return props.intervention?.vehicleId !== currentVehicleId.value ||
-    props.intervention?.registrationDate !== currentRegistrationDate.value ||
-    props.intervention?.interventionType !== currentInterventionType.value ||
-    props.intervention?.mechanicLeaderId !== currentMechanicId.value ||
-    props.intervention?.description !== currentDescription.value
+const areThereChanges = computed(() => {
+  return props.intervention?.vehicleId !== currentVehicleId.value ||
+      props.intervention?.registrationDate !== currentRegistrationDate.value ||
+      props.intervention?.interventionType !== currentInterventionType.value ||
+      props.intervention?.mechanicLeaderId !== currentMechanicId.value ||
+      props.intervention?.description !== currentDescription.value
 });
 const minDate = new Date(new Date());
 const currentVehicle = ref();
@@ -78,7 +78,7 @@ watch(() => currentVehicleId.value, (newValue) => {
   }
 });
 
-function onSubmit(){
+function onSubmit() {
   const updatedIntervention = {
     ...props.intervention,
     vehicleId: currentVehicleId.value,
@@ -90,7 +90,7 @@ function onSubmit(){
   emit('update:intervention', updatedIntervention);
 }
 
-function verifyRole(){
+function verifyRole() {
   isNotAvailable.value = workshopStore.role !== Role.WORKSHOP_OWNER;
 }
 
@@ -162,7 +162,7 @@ function verifyRole(){
               :disabled="isNotAvailable"
           >
             <template #option="slotPros">
-              {{slotPros.option.fullName}}
+              {{ slotPros.option.fullName }}
             </template>
           </pv-select>
         </pv-inputgroup>
@@ -187,15 +187,18 @@ function verifyRole(){
   display: grid;
   gap: 20px;
 }
+
 .form-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
+
 .form-submit {
   display: flex;
   justify-content: flex-end;
 }
+
 @media (max-width: 768px) {
   .form-content {
     grid-template-columns: 1fr;

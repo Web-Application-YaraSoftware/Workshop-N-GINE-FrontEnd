@@ -1,21 +1,20 @@
 <script setup>
-import {ref, onMounted} from 'vue';
-import {useRoute} from 'vue-router';
-import {InterventionState} from "../model/intervention-state.enum.js";
-import {InterventionsService} from "../../cmr/services/intervention.service.js";
-import {PersonnelService} from "../services/personnel.service.js";
-import {VehicleService} from "../../cmr/services/vehicle.service.js";
-import {TasksService} from "../services/tasks.service.js";
-import {ClientsService} from "../../cmr/services/clients.service.js";
-import {Intervention} from "../model/intervention.entity.js";
-import {useToast} from 'primevue/usetoast';
-import {Mechanic} from '../model/mechanic.entity.js';
-import {Vehicle} from "../../cmr/model/vehicle.entity.js";
-import {Client} from "../../cmr/model/client.entity.js";
-import {Task} from '../model/task.entity.js';
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { InterventionState } from "../model/intervention-state.enum.js";
+import { InterventionsService } from "../../cmr/services/intervention.service.js";
+import { PersonnelService } from "../services/personnel.service.js";
+import { VehicleService } from "../../cmr/services/vehicle.service.js";
+import { TaskService } from "../services/task.service.js";
+import { ClientService} from "../../cmr/services/client.service.js";
+import { Intervention } from "../model/intervention.entity.js";
+import { useToast } from 'primevue/usetoast';
+import { Mechanic } from '../model/mechanic.entity.js';
+import { Vehicle } from '../model/vehicle.entity.js';
+import { Client } from "../../cmr/model/client.entity.js";
+import { Task } from '../model/task.entity.js';
 import GeneralInformation from "../components/general-information.component.vue";
 import InterventionSummary from "../components/intervention-summary.component.vue";
-import {useWorkshopStore} from "../../shared/services/workshop-store.js";
 
 const route = useRoute();
 const toast = useToast();
@@ -29,11 +28,9 @@ const currentView = ref('generalInformation');
 
 const interventionsService = new InterventionsService();
 const personnelService = new PersonnelService();
-const clientService = new ClientsService();
+const clientService = new ClientService();
 const vehicleService = new VehicleService();
-const taskService = new TasksService();
-
-const workshopStore = useWorkshopStore();
+const taskService = new TaskService();
 
 const isDialogVisible = ref(false);
 const interventionToUpdate = ref(null);
@@ -48,11 +45,11 @@ function loadIntervention() {
         showGeneralInformation();
       })
       .catch(err => {
-        toast.add({severity: 'error', summary: 'Error loading intervention', detail: err.message});
+        toast.add({ severity: 'error', summary: 'Error loading intervention', detail: err.message });
       });
 }
 
-function loadClient(clientId) {
+function loadClient(clientId){
   clientService.getById(clientId)
       .then(
           (response) => {
@@ -69,12 +66,13 @@ function buildClientFromResponseData(data) {
 }
 
 function loadPersonnel() {
-  personnelService.getAllPersonnel(workshopStore.workshop?.id)
+  personnelService.getAllPersonnelByWorkshopId(1)
       .then(response => {
         mechanics.value = response.data.map(mechanic => new Mechanic(mechanic));
+        console.log(mechanics.value);
       })
       .catch(err => {
-        toast.add({severity: 'error', summary: 'Error loading personnel', detail: err.message});
+        toast.add({ severity: 'error', summary: 'Error loading personnel', detail: err.message });
       });
 }
 
@@ -84,18 +82,18 @@ function loadVehicles(clientId) {
         vehicles.value = response.data.map(vehicle => new Vehicle(vehicle));
       })
       .catch(err => {
-        toast.add({severity: 'error', summary: 'Error loading vehicles', detail: err.message});
+        toast.add({ severity: 'error', summary: 'Error loading vehicles', detail: err.message });
       });
 }
 
 function loadTasks() {
   const interventionId = route.params.id || '';
-  taskService.getAllByInterventionId(interventionId)
+  taskService.getByInterventionId(interventionId)
       .then(response => {
         tasks.value = response.data.map(t => new Task(t));
       })
       .catch(err => {
-        toast.add({severity: 'error', summary: 'Error loading tasks', detail: err.message});
+        toast.add({ severity: 'error', summary: 'Error loading tasks', detail: err.message });
       });
 }
 
@@ -117,7 +115,7 @@ function confirmUpdate() {
 
   interventionsService.putIntervention(interventionToUpdate.value.id, interventionToUpdate.value)
       .then(() => {
-        toast.add({severity: 'success', summary: 'Success', detail: 'Intervention updated', life: 4000});
+        toast.add({ severity: 'success', summary: 'Success', detail: 'Intervention updated', life: 4000 });
         isDialogVisible.value = false;
       })
 }
