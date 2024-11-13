@@ -54,7 +54,6 @@ function openNew() {
 
 function buildClientFromResponseData(client) {
   const profile = new Profile(client);
-  profile.setFullName(`${profile.firstName} ${profile.lastName}`)
   return profile;
 }
 
@@ -168,6 +167,12 @@ onMounted(() => {
       >
         <pv-column selectionMode="multiple" style="width: 3rem" :exportable="false"></pv-column>
         <pv-column field="fullName" header="Full name" sortable style="width: fit-content">
+          <!--//TODO: Router link dont work-->
+          <router-link
+              :to="{ name: 'client-details', params: { id: client.id } }"
+              class="ml-2 text-white no-underline hover:underline">
+            {{ client.fullName }}
+          </router-link>
         </pv-column>
         <pv-column field="dni" header="N° document" sortable style="width: fit-content"></pv-column>
         <pv-column field="email" header="Email" sortable style="width: fit-content"></pv-column>
