@@ -13,4 +13,11 @@ export class WorkshopService {
     postMechanicToWorkshop(workshopId, mechanicData) {
         return http.post(`${this.resourceEndPoint}/${workshopId}/mechanics`, mechanicData);
     }
+
+    getClientsUserIdByWorkShopId(workshopId) {
+        return http.get(`${this.resourceEndPoint}/${workshopId}/clients`);
+    }
+    postClientToWorkshop(workshopId, clientData) {
+        return http.post(`${this.resourceEndPoint}/${workshopId}/clients`, clientData);
+    }
 }
