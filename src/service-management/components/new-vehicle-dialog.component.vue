@@ -1,6 +1,6 @@
 <script setup>
 import {ref} from 'vue';
-import {Vehicle} from "../../cmr/model/vehicle.entity.js";
+import {Vehicle} from "../model/vehicle.entity.js";
 
 const dialogVisible = ref(true);
 const vehicle = ref(new Vehicle());
@@ -39,6 +39,20 @@ function onCancel() {
         <pv-floatlabel>
           <label for="model">Model</label>
           <pv-inputtext id="model" v-model="vehicle.model" required/>
+        </pv-floatlabel>
+      </div>
+
+      <div class="p-field">
+        <pv-floatlabel>
+          <label for="image">Image URL</label>
+          <pv-inputtext id="image" v-model="vehicle.image" required/>
+        </pv-floatlabel>
+      </div>
+
+      <div class="p-field">
+        <pv-floatlabel>
+          <label for="iot-device-id">IoT Device ID</label>
+          <pv-inputnumber id="iot-device-id" v-model="vehicle.iotDeviceId" required/>
         </pv-floatlabel>
       </div>
 
