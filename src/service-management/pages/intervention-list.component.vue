@@ -1,78 +1,78 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { InterventionsService } from '../services/interventions.service.js';
-import { ClientsService } from '../services/clients.service.js';
-import { VehiclesService } from '../services/vehicles.service.js';
-import { Client } from '../model/client.entity.js';
-import { Vehicle } from '../model/vehicle.entity.js';
-import NewInterventionDialog from '../components/new-intervention-dialog.component.vue';
+import {ref, computed, onMounted} from 'vue';
+import {useRouter} from 'vue-router';
+import {InterventionsService} from '../services/interventions.service.js';
+import {ClientsService} from '../../cmr/services/clients.service.js';
+import {VehiclesService} from '../../cmr/services/vehicles.service.js';
+import {PersonnelService} from '../services/personnel.service.js';
+import {Client} from '../../cmr/model/client.entity.js';
+import {Vehicle} from '../../cmr/model/vehicle.entity.js';
+import {Intervention} from '../model/intervention.entity.js';
+import {InterventionState} from '../model/intervention-state.enum.js';
+import {InterventionType} from '../model/intervention-type.enum.js';
+import NewInterventionDialog from "../components/new-intervention-dialog.component.vue";
 
-// API service instances
+const router = useRouter();
 const interventionsService = new InterventionsService();
 const clientsService = new ClientsService();
 const vehiclesService = new VehiclesService();
+const personnelService = new PersonnelService();
 
 const interventions = ref([]);
 const noInterventions = ref(false);
 const filters = ref({global: {value: ''}});
 const selectedStatus = ref('All');
 const loading = ref(false);
-const isDialogVisible = ref(false); // Control the dialog visibility
+const isDialogVisible = ref(false);
+const isTableView = ref(true);
 
-//Helper function to create a Client instance
-const createClient = (clientData) => {
-  return new Client(
-      clientData.id,
-      clientData.workshop_id,
-      clientData.first_name,
-      clientData.last_name,
-      clientData.dni,
-      clientData.email,
-      clientData.password,
-      clientData.image,
-      clientData.state,
-      clientData.user_type
-  );
+const createClient = (clientData) => new Client(clientData);
+const createVehicle = (vehicleData) => new Vehicle(vehicleData);
+
+const getClient = (clientId) => {
+  return clientsService.getById(clientId)
+      .then(response => createClient(response.data))
 };
 
-// Helper function to create a Vehicle instance
-const createVehicle = (vehicleData) => {
-  return new Vehicle(
-      vehicleData.id,
-      vehicleData.user_id,
-      vehicleData.license_plate,
-      vehicleData.brand,
-      vehicleData.model
-  );
+const getVehicle = (vehicleId) => {
+  return vehiclesService.getById(vehicleId)
+      .then(response => createVehicle(response.data))
 };
 
-// Function to fetch and enrich intervention data
-const fetchAndEnrichIntervention = (intervention) => {
-  return Promise.all([
-    clientsService.getClientById(intervention.client_id),
-    vehiclesService.getCarById(intervention.vehicle_id)
-  ])
-      .then(([clientResponse, vehicleResponse]) => {
-        const client = createClient(clientResponse.data);
-        const vehicle = createVehicle(vehicleResponse.data);
-
-        return {
-          ...intervention,
-          client,
-          vehicle
-        };
+const getPersonnel = (workshopId, mechanicLeaderId) => {
+  return personnelService.getAllPersonnel(workshopId)
+      .then(response => {
+        const mechanicLeader = response.data.find(m => m.id === mechanicLeaderId);
+        return mechanicLeader ? mechanicLeader.name : 'N/A';
       })
-      .catch(error => {
-        console.error(`Error fetching client or vehicle data for intervention ID: ${intervention.id}`, error);
-        return { ...intervention, client: null, vehicle: null }; // Handle missing client or vehicle
-      });
 };
 
-// Fetch interventions from API and populate client and vehicle details
+const enrichInterventionData = (intervention, client, vehicle, mechanicLeader) => {
+  return {
+    ...intervention,
+    client,
+    vehicle,
+    mechanicLeader,
+    interventionTypeName: InterventionType.getName(intervention.interventionType),
+    stateName: InterventionState.getName(intervention.state)
+  };
+};
+
+const getAndEnrichIntervention = (interventionData) => {
+  const intervention = new Intervention(interventionData);
+
+  return Promise.all([
+    getClient(intervention.clientId),
+    getVehicle(intervention.vehicleId),
+    getPersonnel(intervention.workshopId, intervention.mechanicLeaderId)
+  ])
+      .then(([client, vehicle, mechanicLeader]) => enrichInterventionData(intervention, client, vehicle, mechanicLeader))
+};
+
 const getInterventions = () => {
   loading.value = true;
 
-  interventionsService.getAllInterventions()
+  interventionsService.getAll()
       .then(response => {
         const interventionData = response.data;
 
@@ -81,126 +81,125 @@ const getInterventions = () => {
         } else {
           noInterventions.value = false;
 
-          const populatedInterventionsPromises = interventionData.map(intervention => {
-            return fetchAndEnrichIntervention(intervention);
-          });
+          const populatedInterventionsPromises = interventionData.map(intervention => getAndEnrichIntervention(intervention));
 
-          // Wait until all interventions have been processed
           Promise.all(populatedInterventionsPromises)
               .then(populatedInterventions => {
                 interventions.value = populatedInterventions;
               })
-              .catch(error => {
-                console.error('Error processing interventions:', error);
-              });
         }
-      })
-      .catch(error => {
-        console.error('Error fetching interventions:', error);
-        noInterventions.value = true;
       })
       .finally(() => {
         loading.value = false;
       });
 };
-// Fetch interventions when the component is mounted
+
 onMounted(() => {
   getInterventions();
 });
 
-// Show the dialog
 const openDialog = () => {
   isDialogVisible.value = true;
 };
 
-// Close the dialog
 const closeDialog = () => {
   isDialogVisible.value = false;
 };
 
-// Handle form submission from the dialog
 const submitIntervention = async (interventionData) => {
   try {
-    await interventionsService.postIntervention(interventionData);
-    // After submission, reload interventions
-    onMounted(() => {
-      getInterventions();
-    });
+    await interventionsService.post(interventionData);
+    getInterventions();
   } catch (error) {
     console.error('Error submitting intervention:', error);
   }
   closeDialog();
 };
 
-// Computed property to filter interventions based on selected status
 const filteredInterventions = computed(() => {
   if (selectedStatus.value === 'All') {
     return interventions.value;
   }
-  return interventions.value.filter((intervention) => intervention.state?.name === selectedStatus.value);
+  return interventions.value.filter((intervention) => intervention.stateName === selectedStatus.value);
 });
 
-// Function to set the status filter
 const filterByStatus = (status) => {
   selectedStatus.value = status;
 };
 
-// Function to determine if a button is active
 const isActiveFilter = (status) => {
   return selectedStatus.value === status;
+};
+
+const toggleView = () => {
+  isTableView.value = !isTableView.value;
+};
+
+const getStatusSeverity = (stateName) => {
+  switch (stateName) {
+    case 'Pending':
+      return 'warn';
+    case 'In Progress':
+      return 'info';
+    case 'Completed':
+      return 'success';
+    default:
+      return 'secondary';
+  }
+};
+
+
+const goToInterventionDetail = (id) => {
+  router.push(`/interventions/${id}`);
 };
 </script>
 
 <template>
   <section class="intervention-container p-4">
-    <!-- Header -->
     <section class="header mb-4">
       <h2 class="font-bold">Interventions</h2>
     </section>
 
-    <!-- Disposition modes -->
     <section class="disposition-modes mb-4 flex gap-4">
-      <pv-button icon="pi pi-list" class="p-button-rounded p-button-text custom-size-button" />
-      <pv-button icon="pi pi-table" class="p-button-rounded p-button-text custom-size-button" />
+      <pv-button icon="pi pi-list" @click="toggleView" class="p-button-rounded p-button-text custom-size-button"/>
+      <pv-button icon="pi pi-table" @click="toggleView" class="p-button-rounded p-button-text custom-size-button"/>
     </section>
 
-    <!-- Search and action toolbar -->
     <section class="w-full flex items-center justify-between mb-4">
       <pv-toolbar class="w-full">
         <template #start>
           <pv-iconfield>
             <pv-inputicon>
-              <i class="pi pi-search" />
+              <i class="pi pi-search"/>
             </pv-inputicon>
-            <pv-inputtext class="custom-size-button" v-model="filters['global'].value" placeholder="Keyword" />
+            <pv-inputtext class="custom-size-button" v-model="filters['global'].value" placeholder="Keyword"/>
           </pv-iconfield>
         </template>
         <template #end>
-          <!-- Button to open the dialog -->
-            <pv-button class="custom-size-button" label="Schedule intervention" icon="pi pi-plus" severity="success" @click="openDialog"/>
+          <pv-button class="custom-size-button" label="Schedule intervention" icon="pi pi-plus" severity="success"
+                     @click="openDialog"/>
         </template>
       </pv-toolbar>
     </section>
 
-    <!-- Filters -->
     <section class="filters mb-4 flex gap-4">
       <pv-button
           label="Pending"
-          :class="{ 'p-button-active': isActiveFilter('PENDING') }"
+          :class="{ 'p-button-active': isActiveFilter('Pending') }"
           class="p-button-outlined custom-size-button"
-          @click="filterByStatus('PENDING')"
+          @click="filterByStatus('Pending')"
       />
       <pv-button
-          label="In progress"
-          :class="{ 'p-button-active': isActiveFilter('IN_PROGRESS') }"
+          label="In Progress"
+          :class="{ 'p-button-active': isActiveFilter('In Progress') }"
           class="p-button-outlined custom-size-button"
-          @click="filterByStatus('IN_PROGRESS')"
+          @click="filterByStatus('In Progress')"
       />
       <pv-button
           label="Completed"
-          :class="{ 'p-button-active': isActiveFilter('COMPLETED') }"
+          :class="{ 'p-button-active': isActiveFilter('Completed') }"
           class="p-button-outlined custom-size-button"
-          @click="filterByStatus('COMPLETED')"
+          @click="filterByStatus('Completed')"
       />
       <pv-button
           label="All"
@@ -210,8 +209,7 @@ const isActiveFilter = (status) => {
       />
     </section>
 
-    <!-- Interventions table -->
-    <section class="interventions-table">
+    <section v-if="isTableView" class="interventions-table">
       <pv-datatable
           :value="filteredInterventions"
           class="table"
@@ -224,32 +222,102 @@ const isActiveFilter = (status) => {
           currentPageReportTemplate="Showing {first} to {last} of {totalRecords} interventions"
           responsiveLayout="scroll"
       >
-        <pv-column field="client.firstName" header="Client First Name" sortable></pv-column>
-        <pv-column field="client.lastName" header="Client Last Name" sortable></pv-column>
-        <pv-column field="vehicle.licensePlate" header="Vehicle License Plate" sortable></pv-column>
-        <pv-column field="vehicle.model" header="Vehicle Model" sortable></pv-column>
-        <pv-column field="registration_date" header="Registration Date" sortable></pv-column>
-        <pv-column field="completion_date" header="Completion Date" sortable></pv-column>
-        <pv-column field="state.name" header="Status" sortable></pv-column>
+        <pv-column field="client.firstName" header="Client First Name" sortable>
+          <template #body="slotProps">
+            <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
+              {{ slotProps.data.client.firstName }}
+            </span>
+          </template>
+        </pv-column>
+        <pv-column field="client.lastName" header="Client Last Name" sortable>
+          <template #body="slotProps">
+            <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
+              {{ slotProps.data.client.lastName }}
+            </span>
+          </template>
+        </pv-column>
+        <pv-column field="vehicle.licensePlate" header="Vehicle License Plate" sortable>
+          <template #body="slotProps">
+            <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
+              {{ slotProps.data.vehicle.licensePlate }}
+            </span>
+          </template>
+        </pv-column>
+        <pv-column field="vehicle.model" header="Vehicle Model" sortable>
+          <template #body="slotProps">
+            <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
+              {{ slotProps.data.vehicle.model }}
+            </span>
+          </template>
+        </pv-column>
+        <pv-column field="mechanicLeader" header="Mechanic Leader" sortable>
+          <template #body="slotProps">
+            <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
+              {{ slotProps.data.mechanicLeader }}
+            </span>
+          </template>
+        </pv-column>
+        <pv-column field="interventionTypeName" header="Intervention Type" sortable>
+          <template #body="slotProps">
+            <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
+              {{ slotProps.data.interventionTypeName }}
+            </span>
+          </template>
+        </pv-column>
+        <pv-column field="registrationDate" header="Registration Date" sortable>
+          <template #body="slotProps">
+            <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
+              {{ slotProps.data.registrationDate }}
+            </span>
+          </template>
+        </pv-column>
+        <pv-column field="completionDate" header="Completion Date" sortable>
+          <template #body="slotProps">
+            <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
+              {{ slotProps.data.completionDate || 'N/A' }}
+            </span>
+          </template>
+        </pv-column>
+        <pv-column field="stateName" header="Status" sortable>
+          <template #body="slotProps">
+            <pv-button
+                @click="goToInterventionDetail(slotProps.data.id)"
+                :severity="getStatusSeverity(slotProps.data.stateName)"
+                :label="slotProps.data.stateName"
+                class="cursor-pointer custom-status-button"
+            />
+          </template>
+        </pv-column>
       </pv-datatable>
 
-      <!-- Show a loading indicator if data is being fetched -->
-      <div v-if="loading" class="loading-indicator">
-        Loading interventions...
-      </div>
-
-      <!-- Show no interventions message -->
-      <div v-if="noInterventions" class="no-interventions">
-        No interventions found.
-      </div>
+      <div v-if="loading" class="loading-indicator">Loading interventions...</div>
+      <div v-if="noInterventions" class="no-interventions">No interventions found.</div>
     </section>
 
-    <!-- New Intervention Dialog -->
-    <new-intervention-dialog
-        :visible="isDialogVisible"
-        @close="closeDialog"
-        @submit="submitIntervention"
-    />
+    <section v-else class="cards-view">
+      <pv-card v-for="intervention in filteredInterventions" :key="intervention.id" class="intervention-card"
+               @click="goToInterventionDetail(intervention.id)">
+        <template #header>
+          <div class="card-header">
+            <h3>{{ intervention.client.firstName }} {{ intervention.client.lastName }}</h3>
+            <pv-button
+                :severity="getStatusSeverity(intervention.stateName)"
+                :label="intervention.stateName"
+                class="status-button"
+            />
+          </div>
+        </template>
+        <template #content class="card-content">
+          <p><strong>Vehicle:</strong> {{ intervention.vehicle.licensePlate }} - {{ intervention.vehicle.model }}</p>
+          <p><strong>Mechanic Leader:</strong> {{ intervention.mechanicLeader }}</p>
+          <p><strong>Intervention Type:</strong> {{ intervention.interventionTypeName }}</p>
+          <p><strong>Registration Date:</strong> {{ intervention.registrationDate }}</p>
+          <p><strong>Completion Date:</strong> {{ intervention.completionDate || 'N/A' }}</p>
+        </template>
+      </pv-card>
+    </section>
+
+    <new-intervention-dialog :visible="isDialogVisible" @close="closeDialog" @submit="submitIntervention"/>
   </section>
 </template>
 
@@ -271,14 +339,6 @@ const isActiveFilter = (status) => {
 .disposition-modes {
   display: flex;
   justify-content: flex-start;
-  font-size: 3rem;
-}
-
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  font-size: 100px;
 }
 
 .custom-size-button {
@@ -295,31 +355,51 @@ const isActiveFilter = (status) => {
   border: 2px solid #007ad9;
 }
 
-.interventions-table {
+.interventions-table,
+.cards-view {
   margin-top: 20px;
-  width: 100%;
-  overflow-x: auto;
 }
 
-p-datatable-sm {
-  text-align: center;
-  font-weight: bold;
-  padding: 10px;
+.cards-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
 }
 
-.loading-indicator {
-  text-align: center;
-  margin-top: 20px;
+.intervention-card {
+  padding: 20px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.intervention-card:hover {
+  transform: scale(1.02);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 1.2rem;
+  font-weight: bold;
   color: #007ad9;
 }
 
+.card-content {
+  font-size: 1rem;
+  color: #333;
+}
+
+.loading-indicator,
 .no-interventions {
   text-align: center;
   margin-top: 20px;
   font-size: 1.2rem;
-  color: red;
 }
+
 .table {
   min-width: fit-content;
   width: 100%;
