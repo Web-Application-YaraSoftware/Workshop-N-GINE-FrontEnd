@@ -1,7 +1,7 @@
 <script setup>
 import ExecutionRequests from "./execution-requests.component.vue";
 import ExecutionTracking from "./execution-tracking.component.vue";
-import {useWorkshopStore} from "../../shared/services/workshop-store.js";
+import {useWorkshopStore} from "../services/workshop-store.js";
 import {Intervention} from "../model/intervention.entity.js";
 import {Task} from "../model/task.entity.js";
 import {ProductStock} from "../../Inventory/model/product-stock.entity.js";

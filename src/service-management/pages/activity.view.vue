@@ -1,7 +1,7 @@
 <script setup>
 import {computed, markRaw, onMounted, ref, watchEffect} from "vue";
 import {useRoute, useRouter} from "vue-router";
-import {useWorkshopStore} from "../../shared/services/workshop-store.js";
+import {useWorkshopStore} from "../services/workshop-store.js";
 import ActivityInformation from "../components/activity-information.component.vue";
 import ActivityDiagnosticPreparation from "../components/activity-diagnostic-preparation.component.vue";
 import ActivityExecution from "../components/activity-execution.component.vue";

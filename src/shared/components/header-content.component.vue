@@ -1,13 +1,14 @@
 <script setup>
-import {useWorkshopStore} from "../services/workshop-store.js";
+import {useWorkshopStore} from "../../service-management/services/workshop-store.js";
 
 const workshopStore = useWorkshopStore();
+const workshopName = workshopStore?.workshopName;
 </script>
 
 <template>
   <header>
     <pv-toolbar>
-      <template #start>{{workshopStore.workshop?.name}}</template>
+      <template #start>{{workshopName}}</template>
       <template #center>
         <div class="flex gap-6">
           <span>What's new</span>

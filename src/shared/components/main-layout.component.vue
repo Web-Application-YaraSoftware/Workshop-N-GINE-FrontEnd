@@ -1,18 +1,6 @@
 <script setup>
   import HeaderContent from "./header-content.component.vue";
   import NavigationBar from "./navigation-bar.component.vue";
-  import {useWorkshopStore} from "../services/workshop-store.js";
-  import {onMounted} from "vue";
-
-  const workshopStore = useWorkshopStore();
-
-  function getWorkshop(){
-    workshopStore.getWorkshop();
-  }
-
-  onMounted(()=>{
-    getWorkshop();
-  })
 </script>
 
 <template>

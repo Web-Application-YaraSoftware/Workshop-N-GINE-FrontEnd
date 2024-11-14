@@ -10,7 +10,7 @@ import {Task} from "../model/task.entity.js";
 import {Client} from "../../cmr/model/client.entity.js";
 import {InterventionType} from "../model/intervention-type.enum.js";
 import {InterventionState} from "../model/intervention-state.enum.js";
-import {useWorkshopStore} from "../../shared/services/workshop-store.js";
+import {useWorkshopStore} from "../services/workshop-store.js";
 import {useRouter} from "vue-router";
 
 // Services

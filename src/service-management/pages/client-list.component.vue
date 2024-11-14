@@ -4,8 +4,8 @@ import ModelMessageDialog from "../../shared/components/model-message-dialog.com
 import { onMounted, ref, provide } from "vue";
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
-import { useWorkshopStore } from "../../shared/services/workshop-store.js";
-import { WorkshopService } from "../../service-management/services/workshop.service.js";
+import { useWorkshopStore } from "../services/workshop-store.js";
+import { WorkshopService } from "../services/workshop.service.js";
 import { ProfilesService } from "../../profile-management/services/profiles.service.js";
 import { Profile } from "../../profile-management/model/profile.entity.js";
 

@@ -1,6 +1,6 @@
 <script setup>
 import {reactive} from "vue";
-import {useWorkshopStore} from "../services/workshop-store.js";
+import {useWorkshopStore} from "../../service-management/services/workshop-store.js";
 
 const workshopStore = useWorkshopStore();
 
