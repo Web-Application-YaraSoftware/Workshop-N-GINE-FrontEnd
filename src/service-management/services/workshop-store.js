@@ -1,18 +1,19 @@
 import {defineStore} from "pinia";
 import {ref} from "vue";
-import {WorkshopService} from "../../service-management/services/workshop.service.js";
-import {Workshop} from "../../service-management/model/workshop.entity.js";
+import {WorkshopService} from "./workshop.service.js";
 
 export const useWorkshopStore = defineStore( 'workshop', ()=>{
     const workshopService = new WorkshopService();
+    const workshopName = ref('');
 
-    const workshop = ref({
-        id: 1
-    });
-    const role = ref(1);
-    const user = ref({
-        id: 1
-    });
+    function getWorkshop(id){
+        workshopService.getById(id)
+            .then(response => {
+                workshopName.value = response.data.name;
+                localStorage.setItem('workshopName', response.data.name);
+            });
+    }
+
     const mechanicType = ref(null);
     const mechanicTypes = [
         {
@@ -25,12 +26,6 @@ export const useWorkshopStore = defineStore( 'workshop', ()=>{
         }
     ];
 
-    function getWorkshop(id = 1){
-        workshopService.getById(id)
-            .then(response => {
-                workshop.value = new Workshop(response.data);
-            });
-    }
     function setLeader(){
         mechanicType.value = mechanicTypes[0];
     }
@@ -39,11 +34,9 @@ export const useWorkshopStore = defineStore( 'workshop', ()=>{
     }
 
     return {
-        workshop,
-        role,
-        user,
         mechanicType,
         mechanicTypes,
+        workshopName,
         getWorkshop,
         setLeader,
         setAssistant
