@@ -25,4 +25,8 @@ export class VehicleService {
     postVehicle(data) {
         return http.post(this.resourceEndpoint, data);
     }
+
+    deleteVehicle(id) {
+        return http.delete(`${this.resourceEndpoint}/${id}`);
+    }
 }
