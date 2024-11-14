@@ -44,10 +44,8 @@ export const useAuthStore = defineStore( 'auth', ()=>{
         user.value.workshopId = localStorage.getItem('workshopId') || 0;
         workshopStore.workshopName = localStorage.getItem('workshopName') || '';
         if(workshopStore.workshopName === '' && user.value.workshopId !== 0){
-            console.log(user.value.workshopId);
             workshopStore.getWorkshop(user.value.workshopId);
         }
-        console.log(user.value.id, user.value.roleId, user.value.workshopId);
     }
 
     function refreshWorkshop(){
