@@ -77,7 +77,7 @@ function registerNewVehicle(vehicle) {
 function updateClient() {
   confirmationMessage.value = 'Are you sure you want to update this client?';
   onConfirmAction.value = () => {
-    profileService.putProfile(clientId.value, workshopClient.value).then(() => {
+    profileService.putProfile(userId.value, workshopClient.value).then(() => {
       loadClientData();
     });
   };
@@ -181,7 +181,8 @@ onMounted(() => {
 .client-info-container {
   padding: 3rem;
   margin: 2rem 0;
-  border: 1px solid #e0e0e0;
+  border: 2px solid #78B4FF;
+  background-color: #EBF7FF;
   border-radius: 1rem;
   display: grid;
   grid-template-columns: 1fr 3fr 1fr;
@@ -197,20 +198,23 @@ onMounted(() => {
 .full-width {
   width: 100%;
   font-size: 1.3rem;
+  color: #004B86;
 }
 
 label {
   font-size: 1.4rem;
+  color: #004B86;
 }
 
 .section-title {
   font-size: 2.7rem;
   font-weight: 500;
   margin-left: 2rem;
+  color: #004B86;
 }
 
 .section-header {
-  margin-right: 2rem;
+  margin: 2rem 2rem;
   display: flex;
   justify-content: space-between;
 }
@@ -218,7 +222,12 @@ label {
 .client-cars-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-gap: 1rem;
+  grid-gap: 1.5rem;
+  padding: 1rem;
+  border: 2px solid #78B4FF;
+  background-color: #EBF7FF;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 75, 134, 0.1);
 }
 
 .client-info-actions {
@@ -230,6 +239,27 @@ label {
 .button {
   min-width: 50px;
   min-height: 50px;
+  transition: background-color 0.3s ease;
+}
+
+.button.p-button-primary {
+  background-color: #006DFF;
+  color: white;
+  border-radius: 30px;
+}
+
+.button.p-button-primary:hover {
+  background-color: #004B86;
+}
+
+.button.p-button-danger {
+  background-color: #FF6F6F;
+  color: white;
+  border-radius: 30px;
+}
+
+.button.p-button-danger:hover {
+  background-color: #FF4C4C;
 }
 
 @media (max-width: 768px) {
