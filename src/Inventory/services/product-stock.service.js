@@ -2,7 +2,7 @@ import http from "../../shared/services/http-common.js";
 
 export class ProductStockService {
     constructor() {
-        this.resourceEndpoint = '/products-stock';
+        this.resourceEndpoint = '/products';
     }
   
     getAllByWorkshopId(id) {
