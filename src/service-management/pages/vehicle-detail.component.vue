@@ -1,9 +1,9 @@
 <script setup>
 import {ref, onMounted} from 'vue';
 import {useRoute} from 'vue-router';
-import {Vehicle} from "../../cmr/model/vehicle.entity.js";
-import {VehicleService} from "../../cmr/services/vehicle.service.js";
-import {InterventionsService} from "../../cmr/services/intervention.service.js";
+import {Vehicle} from "../model/vehicle.entity.js";
+import {VehicleService} from "../services/vehicle.service.js";
+import {InterventionsService} from "../services/interventions.service.js";
 import {Intervention} from "../model/intervention.entity.js";
 import RegisterInterventions from "../components/register-interventions.component.vue";
 
