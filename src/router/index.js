@@ -128,9 +128,11 @@ router.beforeEach((to, from, next) => {
     const authStore = useAuthStore();
     authStore.refresh();
     if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {
+        authStore.refreshWorkshop();
         next({name: 'home'});
     }
     else if (to.name !== 'login' && to.name !== 'register' && !authStore.isAuthenticated) {
+        authStore.refreshWorkshop();
         next({name: 'login'});
     }
     else {
