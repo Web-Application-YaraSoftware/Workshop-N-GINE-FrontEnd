@@ -8,7 +8,7 @@ export class NotificationService {
     }
 
     getByUserId(userId){
-        return http.get(`${this.resourceEndpoint}?userid=${userId}`);
+        return http.get(`${this.resourceEndpoint}?userId=${userId}`);
     }
 
     updateState(notification, newState){

@@ -1,12 +1,12 @@
 import {NotificationState} from "./notification-state.enum.js";
 
 export class Notification {
-    constructor({ id = 0, state = NotificationState.UNREAD, userid = 0, date = new date(), content = '', endpoint = ''}) {
+    constructor({ id = 0, stateId = NotificationState.UNREAD, userId = 0, date = new date(), content = '', endpoints = ''}) {
         this.id = id;
-        this.state = state;
-        this.userid = userid;
+        this.stateId = stateId;
+        this.userId = userId;
         this.date = new Date(date);
         this.content = content;
-        this.endpoint = endpoint;
+        this.endpoint = endpoints;
     }
 }
