@@ -51,8 +51,8 @@ function IsValid() {
 </script>
 
 <template>
-  <pv-toast/>
   <div class="login-container background">
+    <pv-toast/>
     <span></span>
     <span></span>
     <span></span>
@@ -82,7 +82,7 @@ function IsValid() {
             <form class="form" @submit.prevent="onSubmit">
               <pv-floatlabel class="w-full">
                 <pv-inputtext class="w-full my-2" id="email" v-model="username"/>
-                <label for="email">Email</label>
+                <label for="email">Username</label>
               </pv-floatlabel>
               <pv-floatlabel class="w-full">
                 <pv-password class="w-full my-2" id="password" v-model="password" toggleMask fluid/>
