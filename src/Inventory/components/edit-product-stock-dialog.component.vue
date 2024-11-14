@@ -41,18 +41,18 @@ function onReject(){
     </section>
 
     <section class="form-section">
-      <h4>Type</h4>
-      <pv-inputtext v-model="props.product.productType.name" class="input-field" required />
-    </section>
-
-    <section class="form-section">
       <h4>Amount</h4>
-      <pv-inputtext v-model="props.product.amount" class="input-field" required />
+      <pv-inputtext v-model="props.product.stockQuantity" class="input-field" required />
     </section>
 
     <section class="form-section">
       <h4>Limit</h4>
-      <pv-inputtext v-model="props.product.limit" class="input-field" required />
+      <pv-inputtext v-model="props.product.lowStockThreshold" class="input-field" required />
+    </section>
+
+    <section class="form-section">
+      <h4>Description</h4>
+      <pv-inputtext v-model="props.product.description" class="input-field" required />
     </section>
 
     <template #footer>
