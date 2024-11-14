@@ -20,4 +20,10 @@ export class WorkshopService {
     postClientToWorkshop(workshopId, clientData) {
         return http.post(`${this.resourceEndPoint}/${workshopId}/clients`, clientData);
     }
+    getAllInterventionsByMechanicLeaderId(workshopId, mechanicLeaderId) {
+        return http.get(`${this.resourceEndPoint}/${workshopId}/interventions?mechanicLeaderId=${mechanicLeaderId}`);
+    }
+
+
+
 }
