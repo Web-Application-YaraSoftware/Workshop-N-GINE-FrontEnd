@@ -5,6 +5,7 @@ import NewMechanicDialog from "../components/mechanic-form-dialog.component.vue"
 import { ProfilesService } from "../../profile-management/services/profiles.service.js";
 import { WorkshopService } from "../services/workshop.service.js";
 import { Profile } from "../../profile-management/model/profile.entity.js";
+import {useAuthStore} from "../../iam/services/auth-store.js";
 
 const isModalOpen = ref(false);
 const selectedMechanic = ref(null);
@@ -14,7 +15,7 @@ const searchQuery = ref('');
 
 const profilesService = new ProfilesService();
 const workshopService = new WorkshopService();
-const workshopId = 1;
+const workshopId = useAuthStore().user.workshopId;
 
 function fetchMechanics() {
   fetchMechanicsUserId()

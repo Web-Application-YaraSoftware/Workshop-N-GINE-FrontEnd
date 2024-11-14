@@ -4,10 +4,10 @@ import ModelMessageDialog from "../../shared/components/model-message-dialog.com
 import { onMounted, ref, provide } from "vue";
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
-import { useWorkshopStore } from "../services/workshop-store.js";
 import { WorkshopService } from "../services/workshop.service.js";
 import { ProfilesService } from "../../profile-management/services/profiles.service.js";
 import { Profile } from "../../profile-management/model/profile.entity.js";
+import {useAuthStore} from "../../iam/services/auth-store.js";
 
 // Clients
 const clientItem = ref({});
@@ -28,7 +28,7 @@ provide('dialogVisibility', {
 });
 
 // Services
-const workshopStore = useWorkshopStore();
+const workshopId = useAuthStore().user.workshopId;
 const workshopService = new WorkshopService();
 const profilesService = new ProfilesService();
 const toast = useToast();
@@ -36,7 +36,7 @@ const toast = useToast();
 // Api Requests
 async function getClients() {
   try {
-    const response = await workshopService.getClientsUserIdByWorkShopId(workshopStore.workshop?.id);
+    const response = await workshopService.getClientsUserIdByWorkShopId(workshopId);
     const userIds = response.data;
     const profilePromises = userIds.map(userId => profilesService.getProfileByUserId(userId));
     const profiles = await Promise.all(profilePromises);
@@ -269,15 +269,6 @@ onMounted(() => {
 .table {
   min-width: 1000px;
   table-layout: auto;
-}
-
-.link {
-  color: #004B86;
-  text-decoration: none;
-}
-
-.link:hover {
-  text-decoration: underline;
 }
 
 .delete-icon {
