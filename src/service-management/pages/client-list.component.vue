@@ -97,7 +97,7 @@ function onCreateClient(client) {
     age,
     location
   };
-  workshopService.postClientToWorkshop(workshopStore.workshop?.id, newClient)
+  workshopService.postClientToWorkshop(workshopId, newClient)
     .then(response => {
       clients.value = [buildClientFromResponseData(response.data), ...clients.value];
       toast.add({ severity: 'success', summary: 'Successful', detail: 'Client registered', life: 3000 });
