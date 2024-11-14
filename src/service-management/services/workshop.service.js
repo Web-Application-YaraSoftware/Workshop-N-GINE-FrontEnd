@@ -6,6 +6,11 @@ export class WorkshopService {
     getById(id) {
         return http.get(`${this.resourceEndPoint}/${id}`);
     }
+
+    post(data) {
+        return http.post(this.resourceEndPoint, data);
+    }
+
     getMechanicsUserIdByWorkshopId(workshopId) {
         return http.get(`${this.resourceEndPoint}/${workshopId}/mechanics`);
     }
