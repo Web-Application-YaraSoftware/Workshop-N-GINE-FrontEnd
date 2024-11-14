@@ -2,19 +2,19 @@
 import {useToast} from "primevue/usetoast";
 import {computed, onMounted, ref} from "vue";
 import {FilterMatchMode} from '@primevue/core/api';
-import {InterventionsService} from "../services/interventions.service.js";
-import {ClientsService} from "../../cmr/services/clients.service.js";
 import {Intervention} from "../model/intervention.entity.js";
 import {Client} from "../../cmr/model/client.entity.js";
 import {InterventionType} from "../model/intervention-type.enum.js";
 import {InterventionState} from "../model/intervention-state.enum.js";
 import {useWorkshopStore} from "../services/workshop-store.js";
 import {useRouter} from "vue-router";
+import {useAuthStore} from "../../iam/services/auth-store.js";
+import {WorkshopService} from "../services/workshop.service.js";
 
 // Services
+const authenticationStore = useAuthStore();
 const workshopStore = useWorkshopStore();
-const interventionService = new InterventionsService();
-const clientService = new ClientsService();
+const workshopService = new WorkshopService();
 const router = useRouter();
 const toast = useToast();
 // Table configuration
@@ -65,8 +65,9 @@ onMounted(() => {
 
 // Methods
 function getInterventions() {
-  const userId = workshopStore.user.id;
-  interventionService.getAllByMechanicLeaderId(userId)
+  const userId = authenticationStore.user.id;
+  const workshopId = authenticationStore.user.workshopId;
+  workshopService.getAllInterventionsByMechanicLeaderId(workshopId, userId)
       .then(
           (response) => {
             interventions.value = buildDataFromResponseData(response.data);
@@ -86,7 +87,7 @@ function buildDataFromResponseData(interventions){
 }
 
 function getClients(){
-  clientService.getAllByWorkshop(workshopStore.workshop.id)
+  workshopService.getClientsUserIdByWorkShopId(authenticationStore.user.workshopId)
       .then(
           (response) =>
           {
