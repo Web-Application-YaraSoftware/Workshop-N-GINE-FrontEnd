@@ -2,7 +2,7 @@ import http from "../../shared/services/http-common.js";
 
 export class ProductRequestService {
     constructor() {
-        this.resourceEndpoint = '/products-request';
+        this.resourceEndpoint = '/product-requests';
     }
   
     getAllByTaskId(taskId) {
@@ -22,12 +22,16 @@ export class ProductRequestService {
     }
   
     getAllByWorkshopId(workshopId){
-        return http.get(`${this.resourceEndpoint}?workshopId=${workshopId}&status=0`);
+        return http.get(`${this.resourceEndpoint}?workshopId=${workshopId}`);
     }
 
-    updateRequests(request, newStatus) {
-        const updateData = { status: newStatus };
-        return http.patch(`${this.resourceEndpoint}/${request.id}`, updateData);
+    acceptRequest(id) {
+        return http.post(`${this.resourceEndpoint}/${id}/accept`);
     }
-  
+
+    rejectRequest(id) {
+        return http.post(`${this.resourceEndpoint}/${id}/reject`);
+
+    }
+
 }
