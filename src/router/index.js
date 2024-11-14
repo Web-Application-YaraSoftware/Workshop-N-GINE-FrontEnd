@@ -38,17 +38,17 @@ const router = createRouter({
                     path: 'inventory',
                     name: 'inventory',
                     redirect: {name: 'stock'},
-                    component: () => import('../service-management/components/inventory-header.component.vue'),
+                    component: () => import('../Inventory/components/inventory-header.component.vue'),
                     children: [
                         {
                             path: 'stock',
                             name: 'stock',
-                            component: () => import('../service-management/pages/inventory-stock.component.vue')
+                            component: () => import('../Inventory/pages/inventory-stock.component.vue')
                         },
                         {
                             path: 'requests',
                             name: 'requests',
-                            component: () => import('../service-management/pages/inventory-requests.component.vue')
+                            component: () => import('../Inventory/pages/inventory-requests.component.vue')
                         }
                     ]
                 },
