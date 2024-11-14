@@ -1,5 +1,5 @@
 <script setup>
-import {useWorkshopStore} from "../../shared/services/workshop-store.js";
+import {useWorkshopStore} from "../services/workshop-store.js";
 import {Intervention} from "../model/intervention.entity.js";
 import {TasksService} from "../services/tasks.service.js";
 import {Task} from "../model/task.entity.js";

@@ -3,7 +3,7 @@ import TaskDistribution from "./task-distribution.component.vue";
 import DiagnosticIntervention from "./diagnostic-intervention.component.vue";
 import {PersonnelService} from "../services/personnel.service.js";
 import {TasksService} from "../services/tasks.service.js";
-import {useWorkshopStore} from "../../shared/services/workshop-store.js";
+import {useWorkshopStore} from "../services/workshop-store.js";
 import {Mechanic} from "../model/mechanic.entity.js";
 import {onMounted, ref, watch} from "vue";
 import {Task} from "../model/task.entity.js";

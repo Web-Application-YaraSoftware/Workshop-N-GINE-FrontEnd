@@ -1,6 +1,6 @@
 <script setup>
 import {computed, onMounted, ref, watch, watchEffect} from 'vue';
-import {useWorkshopStore} from "../../shared/services/workshop-store.js";
+import {useWorkshopStore} from "../services/workshop-store.js";
 import { Intervention } from "../model/intervention.entity.js";
 import {Client} from "../../cmr/model/client.entity.js";
 import {InterventionType} from "../model/intervention-type.enum.js";

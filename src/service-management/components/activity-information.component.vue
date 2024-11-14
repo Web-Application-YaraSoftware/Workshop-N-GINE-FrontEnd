@@ -11,7 +11,7 @@ import {IotDevicesService} from "../../cmr/services/iot-devices.service.js";
 import {ClientsService} from "../../cmr/services/clients.service.js";
 import {VehiclesService} from "../../cmr/services/vehicles.service.js";
 import {PersonnelService} from "../services/personnel.service.js";
-import {useWorkshopStore} from "../../shared/services/workshop-store.js";
+import {useWorkshopStore} from "../services/workshop-store.js";
 import {computed, ref, watch} from "vue";
 import {Mechanic} from "../model/mechanic.entity.js";
 
