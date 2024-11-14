@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onMounted, ref} from "vue";
+import {computed, ref} from "vue";
 import {useAuthStore} from "../../iam/services/auth-store.js";
 import {AccessService} from "../../iam/services/access.service.js";
 import {useRouter} from "vue-router";
@@ -17,12 +17,6 @@ const credentials = computed(() => {
     username: username.value,
     password: password.value
   }
-});
-
-onMounted(() => {
-  authStore.refresh();
-  authStore.refreshWorkshop();
-  IsLoggedIn();
 });
 
 function onSubmit(event) {
@@ -52,12 +46,6 @@ function goToHome() {
 
 function IsValid() {
   return username.value.length > 0 && password.value.length > 0;
-}
-
-function IsLoggedIn() {
-  if(authStore.isAuthenticated) {
-    goToHome();
-  }
 }
 
 </script>

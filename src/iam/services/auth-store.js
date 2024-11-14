@@ -8,7 +8,7 @@ export const useAuthStore = defineStore( 'auth', ()=>{
     const token = ref('');
 
     const isAuthenticated = computed(() =>
-        token.value !== '' && user.value.id !== 0 && user.value.roleId !== 0 && user.value.workshopId !== 0
+        token.value !== '' && user.value.id !== '' && user.value.roleId !== '' && user.value.workshopId !== ''
     );
 
     const user = ref({
@@ -39,9 +39,9 @@ export const useAuthStore = defineStore( 'auth', ()=>{
 
     function refresh(){
         token.value = localStorage.getItem('token') || '';
-        user.value.id = Number(localStorage.getItem('userId')) || 0;
-        user.value.roleId = Number(localStorage.getItem('roleId')) || 0;
-        user.value.workshopId = Number(localStorage.getItem('workshopId')) || 0;
+        user.value.id = localStorage.getItem('userId') || 0;
+        user.value.roleId = localStorage.getItem('roleId') || 0;
+        user.value.workshopId = localStorage.getItem('workshopId') || 0;
         workshopStore.workshopName = localStorage.getItem('workshopName') || '';
         if(workshopStore.workshopName === '' && user.value.workshopId !== 0){
             console.log(user.value.workshopId);
