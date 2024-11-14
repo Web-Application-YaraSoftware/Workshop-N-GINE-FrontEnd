@@ -126,10 +126,14 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     const authStore = useAuthStore();
-    if (to.name !== 'login' && to.name !== 'register' && !authStore.isAuthenticated) {
+    authStore.refresh();
+    if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {
+        next({name: 'home'});
+    }
+    else if (to.name !== 'login' && to.name !== 'register' && !authStore.isAuthenticated) {
         next({name: 'login'});
-    } else {
-        authStore.refresh();
+    }
+    else {
         next();
     }
 });
