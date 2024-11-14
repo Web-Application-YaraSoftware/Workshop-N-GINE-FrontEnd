@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import { Intervention } from "../model/intervention.entity.js";
 import { CheckpointService } from "../services/checkpoint.service.js";
 import { TaskProductUsageService } from "../services/task-product-usage.service.js";
-import { ProductStockService } from "../services/product-stock.service.js";
+import { ProductStockService } from "../../Inventory/services/product-stock.service.js";
 import TaskDetail from "./task-detail.component.vue";
 
 const props = defineProps({
