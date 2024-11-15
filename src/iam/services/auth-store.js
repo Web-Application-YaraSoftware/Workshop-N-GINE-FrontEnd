@@ -17,6 +17,10 @@ export const useAuthStore = defineStore( 'auth', ()=>{
         workshopId : 0
     });
 
+    const isOwner = computed(() => Number(user.value.roleId) === 2);
+    const isClient = computed(() => Number(user.value.roleId) === 3);
+    const isMechanic = computed(() => Number(user.value.roleId) === 1);
+
     function setAuth(newToken){
         token.value = newToken;
         localStorage.setItem('token', newToken);
@@ -70,6 +74,9 @@ export const useAuthStore = defineStore( 'auth', ()=>{
         setWorkshopId,
         refresh,
         refreshWorkshop,
-        logout
+        logout,
+        isOwner,
+        isClient,
+        isMechanic
     };
 });
