@@ -1,10 +1,10 @@
 <script setup>
-import {computed, onMounted, ref, watch, watchEffect} from 'vue';
-import {useWorkshopStore} from "../services/workshop-store.js";
+import { computed, onMounted, ref, watch, watchEffect } from 'vue';
 import { Intervention } from "../model/intervention.entity.js";
-import {Client} from "../../cmr/model/client.entity.js";
-import {InterventionType} from "../model/intervention-type.enum.js";
-import {Role} from "../../iam/model/role.enum.js";
+import { Profile } from "../../profile-management/model/profile.entity.js";
+import { InterventionType } from "../model/intervention-type.enum.js";
+import { Role } from "../../iam/model/role.enum.js";
+import { useAuthStore } from "../../iam/services/auth-store.js";
 
 const props = defineProps({
   intervention: {
@@ -13,9 +13,9 @@ const props = defineProps({
     default: new Intervention()
   },
   client: {
-    type: Client,
+    type: Profile,
     required: true,
-    default: new Client()
+    default: new Profile()
   },
   mechanics: {
     type: Array,
@@ -29,25 +29,25 @@ const props = defineProps({
   }
 });
 const emit = defineEmits(['update:intervention']);
-const workshopStore = useWorkshopStore();
+const authStore = useAuthStore();
 const isNotAvailable = ref(false);
-const areThereChanges = computed(() =>{
-    return props.intervention?.vehicleId !== currentVehicleId.value ||
-    props.intervention?.registrationDate !== currentRegistrationDate.value ||
-    props.intervention?.interventionType !== currentInterventionType.value ||
-    props.intervention?.mechanicLeaderId !== currentMechanicId.value ||
-    props.intervention?.description !== currentDescription.value
+const areThereChanges = computed(() => {
+  return props.intervention?.vehicleId !== currentVehicleId.value ||
+      props.intervention?.scheduledDate.getTime() !== currentScheduledDate.value.getTime() ||
+      props.intervention?.type !== currentInterventionType.value ||
+      props.intervention?.mechanicLeaderId !== currentMechanicId.value ||
+      props.intervention?.description !== currentDescription.value;
 });
-const minDate = new Date(new Date());
+const minDate = new Date();
 const currentVehicle = ref();
 const currentVehicleId = ref();
-const currentRegistrationDate = ref();
+const currentScheduledDate = ref();
 const currentInterventionType = ref();
 const currentMechanicId = ref();
 const currentDescription = ref();
 const interventionTypes = ref([
-  {value: InterventionType.MAINTENANCE, label: InterventionType.getName(InterventionType.MAINTENANCE)},
-  {value: InterventionType.REPARATION, label: InterventionType.getName(InterventionType.REPARATION)},
+  { value: InterventionType.MAINTENANCE, label: InterventionType.getName(InterventionType.MAINTENANCE) },
+  { value: InterventionType.REPARATION, label: InterventionType.getName(InterventionType.REPARATION) },
 ]);
 
 onMounted(() => {
@@ -59,8 +59,8 @@ watchEffect(() => {
     currentVehicle.value = props.clientVehicles.find(vehicle => vehicle.id === props.intervention?.vehicleId);
   }
   if (props.intervention) {
-    currentInterventionType.value = props.intervention?.interventionType;
-    currentRegistrationDate.value = props.intervention?.registrationDate;
+    currentInterventionType.value = props.intervention?.type;
+    currentScheduledDate.value = new Date(props.intervention?.scheduledDate);
     currentMechanicId.value = props.intervention?.mechanicLeaderId;
     currentDescription.value = props.intervention?.description;
   }
@@ -78,22 +78,21 @@ watch(() => currentVehicleId.value, (newValue) => {
   }
 });
 
-function onSubmit(){
+function onSubmit() {
   const updatedIntervention = {
-    ...props.intervention,
     vehicleId: currentVehicleId.value,
-    registrationDate: currentRegistrationDate.value,
-    interventionType: currentInterventionType.value,
     mechanicLeaderId: currentMechanicId.value,
     description: currentDescription.value,
+    type: InterventionType[currentInterventionType.value],
+    scheduledAt: currentScheduledDate.value.toISOString()
   };
+
   emit('update:intervention', updatedIntervention);
 }
 
-function verifyRole(){
-  isNotAvailable.value = workshopStore.role !== Role.WORKSHOP_OWNER;
+function verifyRole() {
+  isNotAvailable.value = authStore.user.roleId == Role.WORKSHOP_OWNER;
 }
-
 </script>
 
 <template>
@@ -125,7 +124,7 @@ function verifyRole(){
         </pv-inputgroup>
         <pv-inputgroup>
           <pv-inputgroupaddon>Brand and Model</pv-inputgroupaddon>
-          <pv-inputtext :value="currentVehicle?.fullName" disabled/>
+          <pv-inputtext :value="`${currentVehicle?.brand} ${currentVehicle?.model}`" disabled/>
         </pv-inputgroup>
         <pv-inputgroup>
           <pv-inputgroupaddon>Intervention Type</pv-inputgroupaddon>
@@ -139,7 +138,7 @@ function verifyRole(){
         <pv-inputgroup>
           <pv-inputgroupaddon>Scheduled Date</pv-inputgroupaddon>
           <pv-datepicker
-              v-model="currentRegistrationDate"
+              v-model="currentScheduledDate"
               :minDate="minDate"
               showButtonBar
               showIcon
@@ -162,7 +161,7 @@ function verifyRole(){
               :disabled="isNotAvailable"
           >
             <template #option="slotPros">
-              {{slotPros.option.fullName}}
+              {{ slotPros.option.fullName }}
             </template>
           </pv-select>
         </pv-inputgroup>
@@ -186,19 +185,81 @@ function verifyRole(){
 .form {
   display: grid;
   gap: 20px;
+  padding: 20px;
+  background-color: #f9fafe;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
+
 .form-content {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
+
 .form-submit {
   display: flex;
   justify-content: flex-end;
 }
+
 @media (max-width: 768px) {
   .form-content {
     grid-template-columns: 1fr;
   }
+
+  .form-submit {
+    justify-content: center;
+  }
+}
+
+.pv-inputgroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.pv-inputgroupaddon {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #555;
+}
+
+.pv-inputtext,
+.pv-select,
+.pv-datepicker,
+.pv-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+}
+
+.pv-inputtext:disabled,
+.pv-select:disabled,
+.pv-datepicker:disabled,
+.pv-textarea:disabled {
+  background-color: #f0f0f0;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.pv-button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.pv-button:hover {
+  background-color: #0056b3;
+}
+
+.pv-button:disabled {
+  background-color: #ccc;
+  color: #888;
+  cursor: not-allowed;
 }
 </style>

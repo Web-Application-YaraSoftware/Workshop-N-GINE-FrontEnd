@@ -2,7 +2,6 @@
 import {ref, onMounted, onBeforeUnmount} from 'vue';
 import {useRouter} from 'vue-router';
 import {InterventionState} from "../model/intervention-state.enum.js";
-import {InterventionType} from "../model/intervention-type.enum.js";
 
 const props = defineProps({
   interventions: {
@@ -13,7 +12,7 @@ const props = defineProps({
   isPanelActive: {
     type: Boolean,
     default: true
-  }
+  },
 });
 const getStatusSeverity = (status) => {
   switch (status) {
@@ -60,14 +59,14 @@ function onRedirectToIntervention(interventionId) {
         <pv-card class="timeline-card">
           <template #header>
             <div class="header">
-              <pv-tag class="status" :severity="getStatusSeverity(slotProps.item.state)">
-                {{ InterventionState.getName(slotProps.item.state) }}
+              <pv-tag class="status" :severity="getStatusSeverity(slotProps.item.status)">
+                {{ slotProps.item.status }}
               </pv-tag>
               <p class="date">{{ slotProps.item.getFormattedDate() }}</p>
             </div>
           </template>
           <template #content>
-            <p class="type">{{ InterventionType.getName(slotProps.item.interventionType) }}</p>
+            <p class="type">{{ slotProps.item.type }}</p>
           </template>
           <template #footer>
             <pv-button label="Read more" class="read-more-button" @click="onRedirectToIntervention(slotProps.item.id)"/>

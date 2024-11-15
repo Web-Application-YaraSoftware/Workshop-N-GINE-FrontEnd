@@ -9,6 +9,14 @@ export class InterventionsService {
         return http.get(`/interventions?mechanicLeaderId=${id}`);
     }
 
+    getAllCheckpointsByInterventionIdAndTaskId(interventionId, taskId) {
+        return http.get(`/interventions/${interventionId}/tasks/${taskId}/checkpoints`);
+    }
+
+    getAllTasksByInterventionId(id) {
+        return http.get(`/interventions/${id}/tasks`);
+    }
+
     getAllByMechanicAssistantId(id) {
         return http.get(`/interventions`);
     }

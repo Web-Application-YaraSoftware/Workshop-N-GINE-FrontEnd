@@ -1,24 +1,22 @@
-import { TaskState } from "./task-state.enum.js";
-
 export class Task {
     constructor({
                     id = 0,
-                    assistantId = 0,
-                    interventionId = 0,
-                    state = TaskState.PENDING,
-                    description = ''
+                    mechanicAssignedId = 0,
+                    description = '',
+                    status = '',
+                    interventionId = 0
                 } = {}) {
         this.id = id;
-        this.assistantId = assistantId;
-        this.interventionId = interventionId;
-        this.state = state;
+        this.mechanicAssignedId = mechanicAssignedId;
         this.description = description;
+        this.status = status;
+        this.interventionId = interventionId;
     }
 
     finishTask() {
-        this.state = TaskState.DONE;
+        this.status = 'DONE';
     }
     cancelTask() {
-        this.state = TaskState.CANCELED;
+        this.status = 'CANCELED';
     }
 }
