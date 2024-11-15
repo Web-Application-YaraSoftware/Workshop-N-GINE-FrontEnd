@@ -2,7 +2,7 @@ import http from "../../shared/services/http-common.js";
 
 export class ProfilesService {
     getProfileByUserId(userId) {
-        return http.get(`/profiles/${userId}`);
+        return http.get(`/profiles?userId=${userId}`);
     }
 
     getById(profileId) {
