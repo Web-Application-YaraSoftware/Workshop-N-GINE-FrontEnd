@@ -13,5 +13,17 @@ export const InterventionState = Object.freeze({
             default:
                 return 'Unknown';
         }
+    },
+    getNumber(name) {
+        switch(name) {
+            case 'Pending':
+                return this.PENDING;
+            case 'In Progress':
+                return this.IN_PROGRESS;
+            case 'Completed':
+                return this.COMPLETED;
+            default:
+                return -1;
+        }
     }
 });

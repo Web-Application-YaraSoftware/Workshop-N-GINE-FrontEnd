@@ -16,4 +16,5 @@ export class Vehicle {
         this.userId = userId;
         this.iotDeviceId = iotDeviceId;
     }
+
 }
