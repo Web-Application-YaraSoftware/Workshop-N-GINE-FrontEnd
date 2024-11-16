@@ -4,13 +4,15 @@ import { NotificationService } from "../services/notification.service.js";
 import { Notification } from "../model/notification.entity.js";
 import { onMounted, ref } from "vue";
 import {NotificationManager} from "../model/notification-manager.entity.js";
+import {useAuthStore} from "../../iam/services/auth-store.js";
 
 const notifications = ref();
 const notificationService = new NotificationService();
 const notificationManager = new NotificationManager();
+const authenticationStore = useAuthStore();
 
 function getNotifications() {
-  notificationService.getByUserId(2)
+  notificationService.getByUserId(authenticationStore.user.id)
       .then(response => {
         notificationManager.notifications.value = buildNotificationListFromResponseData(response.data)
         console.log(notificationManager.notifications)
