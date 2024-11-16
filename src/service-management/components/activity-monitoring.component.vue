@@ -1,12 +1,13 @@
 <script setup>
 import {useWorkshopStore} from "../services/workshop-store.js";
 import {Intervention} from "../model/intervention.entity.js";
-import {TasksService} from "../services/tasks.service.js";
 import {Task} from "../model/task.entity.js";
 import {computed, onMounted, ref, watch} from "vue";
 import {PersonnelService} from "../services/personnel.service.js";
 import {Mechanic} from "../model/mechanic.entity.js";
-import {TaskState} from "../model/task-state.enum.js";
+import {useAuthStore} from "../../iam/services/auth-store.js";
+import {InterventionsService} from "../services/interventions.service.js";
+import {ProfilesService} from "../../profile-management/services/profiles.service.js";
 
 const props = defineProps({
   intervention: {
@@ -16,14 +17,15 @@ const props = defineProps({
   },
   parentAction: Boolean
 });
-const workshopStore = useWorkshopStore();
-const tasksService = new TasksService();
+const authenticationStore = useAuthStore();
+const interventionService = new InterventionsService();
 const personnelService = new PersonnelService();
+const profileService = new ProfilesService();
 const mechanics = ref([]);
 const tasks = ref([]);
 const tasksWithMechanicName = computed(() => {
   return tasks.value.map(task => {
-    const mechanic = mechanics.value.find(mechanic => mechanic?.id === task?.assistantId);
+    const mechanic = mechanics.value.find(mechanic => mechanic?.id === task?.mechanicAssignedId);
     return {
       ...task,
       mechanicName: mechanic?.fullName
@@ -32,11 +34,11 @@ const tasksWithMechanicName = computed(() => {
 });
 const getStatusSeverity = (status) => {
   switch (status) {
-    case TaskState.CANCELED:
+    case 'Pending':
       return 'warn';
-    case TaskState.PENDING:
+    case 'InProgress':
       return 'info';
-    case TaskState.DONE:
+    case 'Completed':
       return 'success';
     default:
       return null;
@@ -58,7 +60,7 @@ onMounted(() => {
 });
 
 function getTasks() {
-  tasksService.getAllByInterventionId(props.intervention?.id)
+  interventionService.getAllTasksByInterventionId(props.intervention?.id)
       .then(
           response => {
             tasks.value = buildTasksFromResponseData(response.data);
@@ -74,10 +76,10 @@ function buildTasksFromResponseData(data){
 }
 
 function getMechanics(){
-  personnelService.getAllPersonnel(workshopStore.workshop.id)
+  personnelService.getAllPersonnel(authenticationStore.user.workshopId)
       .then(
-          response => {
-            mechanics.value = buildMechanicsFromResponseData(response.data);
+          async response => {
+            mechanics.value = await buildMechanicsFromResponseData(response.data);
           },
           error => {
             console.error(error);
@@ -85,8 +87,21 @@ function getMechanics(){
       );
 }
 
-function buildMechanicsFromResponseData(data){
-  return data.map(mechanic => new Mechanic(mechanic))
+function buildMechanicsFromResponseData(userIds){
+
+  const mechanicPromises = userIds.map(userId =>
+      profileService.getProfileByUserId(userId)
+          .then(response => new Mechanic(response.data))
+  );
+
+  return Promise.all(mechanicPromises)
+      .then(mechanics => {
+        return mechanics;
+      })
+      .catch(error => {
+        console.error(error);
+        return [];
+      });
 }
 
 </script>
@@ -105,10 +120,10 @@ function buildMechanicsFromResponseData(data){
     >
       <pv-column field="description" header="Part" style="width: 20rem" sortable/>
       <pv-column field="mechanicName" header="Mechanic" style="width: 10rem" sortable/>
-      <pv-column field="state" header="Status" style="width: 10rem" sortable>
+      <pv-column field="status" header="Status" style="width: 10rem" sortable>
         <template #body="{data}">
-          <pv-tag :severity="getStatusSeverity(data.state)">
-            {{ TaskState.getName(data.state) }}
+          <pv-tag :severity="getStatusSeverity(data.status)">
+            {{ data.status }}
           </pv-tag>
         </template>
       </pv-column>
