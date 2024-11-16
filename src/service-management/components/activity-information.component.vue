@@ -4,16 +4,16 @@ import IotInformation from "./iot-information.component.vue";
 import GeneralInformation from "./general-information.component.vue";
 import {Intervention} from "../model/intervention.entity.js";
 import {IoTDevice} from "../model/iot-device.entity.js";
-import {Client} from "../../cmr/model/client.entity.js";
-import {Vehicle} from "../../cmr/model/vehicle.entity.js";
+import {Vehicle} from "../model/vehicle.entity.js";
 import {InterventionsService} from "../services/interventions.service.js";
 import {IotDevicesService} from "../services/iot-devices.service.js";
-import {ClientsService} from "../../cmr/services/clients.service.js";
 import {VehiclesService} from "../../cmr/services/vehicles.service.js";
 import {PersonnelService} from "../services/personnel.service.js";
-import {useWorkshopStore} from "../services/workshop-store.js";
 import {computed, ref, watch} from "vue";
 import {Mechanic} from "../model/mechanic.entity.js";
+import {useAuthStore} from "../../iam/services/auth-store.js";
+import {ProfilesService} from "../../profile-management/services/profiles.service.js";
+import {Profile} from "../../profile-management/model/profile.entity.js";
 
 const props = defineProps({
   intervention: {
@@ -23,48 +23,56 @@ const props = defineProps({
   }
 });
 const registerInterventions = ref([]);
-const iotInformation = ref([]);
-const validatedIotInformation = computed(()=>{
-  return iotInformation.value.length > 0 ? iotInformation.value[0] : null;
+const iotInformation = ref(new IoTDevice());
+const validatedIotInformation = computed(() => {
+  return iotInformation.value instanceof IoTDevice ? iotInformation.value : new IoTDevice(iotInformation.value);
 });
 const client = ref();
 const clientVehicles = ref([]);
 const mechanics = ref([]);
 const interventionsService = new InterventionsService();
 const iotDevicesService = new IotDevicesService();
-const clientsService = new ClientsService();
+const profileService = new ProfilesService();
 const vehicleService = new VehiclesService();
 const personnelService = new PersonnelService();
-const workshopStore = useWorkshopStore();
+const authenticationStore = useAuthStore();
 
 watch(() => props.intervention,
     () => {
       getRegisterInterventions();
       getIoTDevice();
-      getClient();
-      getVehicles();
+      getVehicles().then(() => {
+        getClient();
+      });
       getMechanics();
     }
 );
 
 function getClient(){
-  clientsService.getById(props.intervention?.clientId)
-      .then(
-          (response) => {
-            client.value = buildClientFromResponseData(response.data);
-          },
-          (error) => {
-            console.error(error);
-          }
-      );
+  const targetUserId = clientVehicles.value.length > 0 ? clientVehicles.value[0].userId : null;
+  profileService.getProfileByUserId(targetUserId)
+   .then(
+       (response) => {
+         client.value = buildClientFromResponseData(response.data);
+       },
+       (error) => {
+         console.error(error);
+       }
+   );
 }
 
 function buildClientFromResponseData(data) {
-  return new Client(data);
+  return new Profile(data);
 }
 
-function getVehicles(){
-  vehicleService.getByClientId(props.intervention?.clientId)
+function getVehicles() {
+  return vehicleService.getById(props.intervention?.vehicleId)
+      .then(
+          (response) => {
+            const userId = response.data.userId;
+            return vehicleService.getByUserId(userId);
+          }
+      )
       .then(
           (response) => {
             clientVehicles.value = buildVehicleFromResponseData(response.data);
@@ -80,7 +88,7 @@ function buildVehicleFromResponseData(data) {
 }
 
 function getMechanics(){
-  personnelService.getAllPersonnel(workshopStore.workshop?.id)
+  personnelService.getAllPersonnel(authenticationStore.user.workshopId)
       .then(
           (response) => {
             mechanics.value = buildMechanicFromResponseData(response.data);
@@ -111,7 +119,9 @@ function getIoTDevice(){
   iotDevicesService.getAllByVehicleId(props.intervention?.vehicleId)
       .then(
           (response) => {
-            iotInformation.value = buildIoTDeviceFromResponseData(response.data);
+            if (response.data) {
+              iotInformation.value = buildIoTDeviceFromResponseData(response.data);
+            }
           },
           (error) => {
             console.error(error);
@@ -120,7 +130,7 @@ function getIoTDevice(){
 }
 
 function buildIoTDeviceFromResponseData(data) {
-  return data.map((iotDevice) => new IoTDevice(iotDevice));
+  return new IoTDevice(data);
 }
 
 function buildInterventionFromResponseData(data) {
