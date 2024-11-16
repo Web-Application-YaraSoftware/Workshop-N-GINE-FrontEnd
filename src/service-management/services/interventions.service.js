@@ -1,8 +1,9 @@
 import http from "../../shared/services/http-common.js";
 
 export class InterventionsService {
-    getAll() {
-        return http.get('/interventions');
+
+    getByVehicleId(id) {
+        return http.get(`/interventions?vehicleId=${id}`);
     }
 
     getAllByMechanicLeaderId(id) {
