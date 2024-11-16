@@ -1,13 +1,8 @@
 <script setup>
 import {computed, onMounted, ref} from "vue";
-
+//productType es un productId
 const props = defineProps({
   productsStock: {
-    type: Array,
-    required: true,
-    default: []
-  },
-  taskProductUsages: {
     type: Array,
     required: true,
     default: []
@@ -19,14 +14,13 @@ const props = defineProps({
   }
 });
 const emit = defineEmits([
-    'add:taskProductUsage', 'update:taskProductUsage', 'delete:taskProductUsage',
-    'add:productRequest', 'update:productRequest', 'delete:productRequest'
+    'add:productRequest', 'update:productRequest'
 ]);
-const taskProductUsagesWithProductStockName = computed(() => {
-  return props.taskProductUsages.map(taskProductUsage => {
-    const product = props.productsStock.find(product => product.id === taskProductUsage.productStockId);
+const productRequestsWithProductName = computed(() => {
+  return props.productsRequests.map(productsRequest => {
+    const product = props.productsStock.find(product => product.id === productsRequest.productId);
     return {
-      ...taskProductUsage,
+      ...productsRequest,
       productName: product ? product.name : 'Unknown'
     };
   });
@@ -36,11 +30,11 @@ const requestedProduct = ref({
   quantity: 0,
   description: ""
 });
-const isStockProduct = computed(() => typeof requestedProduct.value.productType == 'number' && requestedProduct.value.productType !== 0);
-const isRequestProduct = computed(() => typeof requestedProduct.value.productType == 'string' && requestedProduct.value.productType !== "");
+const isRequestProduct = computed(() => typeof requestedProduct.value.productType == 'number' && requestedProduct.value.productType !== 0);
 const availableAmount = computed(() => {
+  console.log(requestedProduct.value.productType)
   const product = props.productsStock.find(product => product.id === requestedProduct.value.productType);
-  return product ? product.amount : 0;
+  return product ? product.stockQuantity : 0;
 });
 const loading = ref(false);
 const options = ref(['From stock', 'Requested']);
@@ -54,16 +48,8 @@ onMounted(() => {
 
 function onSubmit(){
   loading.value = true;
-  requestAddTaskProductUsage();
   requestAddProductRequest();
   loading.value = false;
-}
-
-function requestAddTaskProductUsage(){
-  if (isStockProduct.value){
-    emit('add:taskProductUsage', requestedProduct.value);
-    resetForm();
-  }
 }
 
 function requestAddProductRequest(){
@@ -81,27 +67,18 @@ function resetForm(){
   };
 }
 
-function onRowEditSaveStock(event){
-  if (event.data.productStockId !== event.newData.productStockId || event.data.quantityUsed !== event.newData.quantityUsed)
-    emit('update:taskProductUsage', event.newData);
-}
-
-function onRowDeleteStock(event){
-  emit('delete:taskProductUsage', event);
-}
 
 function onRowEditSaveRequest(event){
-if (event.data.name !== event.newData.name || event.data.requestedQuantity !== event.newData.requestedQuantity || event.data.observation !== event.newData.observation)
+if (event.data.requestedQuantity !== event.newData.requestedQuantity)
     emit('update:productRequest', event.newData);
 }
 
-function onRowDeleteRequest(event){
-  emit('delete:productRequest', event);
-}
 
 function handleOptionChange(option) {
   selectedOption.value = option;
 }
+
+
 </script>
 
 <template>
@@ -122,7 +99,7 @@ function handleOptionChange(option) {
             placeholder="Select a part"
         />
       </pv-inputgroup>
-      <pv-inputgroup  v-if="isStockProduct">
+      <pv-inputgroup  v-if="isRequestProduct">
         <pv-inputgroupaddon>
           <i class="pi pi-bars"></i>
         </pv-inputgroupaddon>
@@ -134,12 +111,7 @@ function handleOptionChange(option) {
         </pv-inputgroupaddon>
         <pv-inputtext type="number" min="1" v-model="requestedProduct.quantity"/>
       </pv-inputgroup>
-      <pv-inputgroup v-if="isRequestProduct">
-        <pv-inputgroupaddon>
-          <i class="pi pi-bars"></i>
-        </pv-inputgroupaddon>
-        <pv-inputtext v-model="requestedProduct.description" placeholder="Add a description (optional)."/>
-      </pv-inputgroup>
+
       <pv-button class="add-button" type="submit" label="Add" icon="pi pi-plus" :loading="loading"/>
     </form>
     <pv-tabs class="options" :value="options[0]">
@@ -150,34 +122,27 @@ function handleOptionChange(option) {
     <div v-if="selectedOption === options[0]" class="table">
       <pv-datatable
           v-model:editingRows="editingRowsStock"
-          :value="taskProductUsagesWithProductStockName"
+          :value="productsStock"
           editMode="row"
           dataKey="id"
           scrollable
-          @row-edit-save="onRowEditSaveStock"
           paginator
           :rows="5"
           :rowsPerPageOptions="[5, 10, 15]"
       >
-        <pv-column field="productName" header="Part" style="width: 20rem">
-          <template #body="{data}">{{data.productName}}</template>
+        <pv-column field="name" header="Part" style="width: 20rem">
+          <template #body="{data}">{{data.name}}</template>
           <template #editor="{data, field}">
-            <pv-select v-model="data.productStockId" :options="productsStock" optionLabel="name" optionValue="id" placeholder="Select a product stock" fluid>
+            <pv-select v-model="data.id" :options="productsStock" optionLabel="name" optionValue="id" placeholder="Select a product stock" fluid>
               <template #option="{option}">
                 <div>{{option.name}}</div>
               </template>
             </pv-select>
           </template>
         </pv-column>
-        <pv-column field="quantityUsed" header="Quantity" style="width: 3rem">
+        <pv-column field="stockQuantity" header="Quantity" style="width: 3rem">
           <template #editor="{data, field}">
             <pv-inputtext type="number" min="1" v-model="data[field]"/>
-          </template>
-        </pv-column>
-        <pv-column style="width: 2.5rem" :rowEditor="true"/>
-        <pv-column style="width: 2.5rem">
-          <template #body="{data}">
-            <pv-button icon="pi pi-trash" text rounded @click="onRowDeleteStock(data)"/>
           </template>
         </pv-column>
       </pv-datatable>
@@ -185,7 +150,7 @@ function handleOptionChange(option) {
     <div v-if="selectedOption === options[1]" class="table">
       <pv-datatable
           v-model:editingRows="editingRowsRequests"
-          :value="productsRequests"
+          :value="productRequestsWithProductName"
           editMode="row"
           dataKey="id"
           scrollable
@@ -194,27 +159,15 @@ function handleOptionChange(option) {
           :rows="5"
           :rowsPerPageOptions="[5, 10, 15]"
       >
-        <pv-column field="name" header="Part" style="width: 20rem">
-          <template #editor="{data, field}">
-            <pv-inputtext v-model="data[field]"/>
-          </template>
+        <pv-column field="productName" header="Part" style="width: 20rem">
+          <template #body="{data}">{{data.productName}}</template>
         </pv-column>
         <pv-column field="requestedQuantity" header="Quantity" style="width: 3rem">
           <template #editor="{data, field}">
             <pv-inputtext type="number" min="1" v-model="data[field]"/>
           </template>
         </pv-column>
-        <pv-column field="observation" header="Observation">
-          <template #editor="{data, field}">
-            <pv-inputtext v-model="data[field]"/>
-          </template>
-        </pv-column>
         <pv-column style="width: 2.5rem" :rowEditor="true"/>
-        <pv-column style="width: 2.5rem">
-          <template #body="{data}">
-            <pv-button icon="pi pi-trash" text rounded @click="onRowDeleteRequest(data)"/>
-          </template>
-        </pv-column>
       </pv-datatable>
     </div>
   </div>
