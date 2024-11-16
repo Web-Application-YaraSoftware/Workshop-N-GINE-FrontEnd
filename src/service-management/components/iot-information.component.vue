@@ -39,7 +39,7 @@ function onDisplayCodeInformation(event, code) {
 
 <template>
   <section class="timeline-section">
-    <div v-if="iotInformation && iotInformation.codeList.length">
+    <div v-if="iotInformation && iotInformation.codeList && iotInformation.codeList.length">
       <div class="datatable-container">
         <pv-datatable
             :value="iotInformation.codeList"
