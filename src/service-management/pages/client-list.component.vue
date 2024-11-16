@@ -7,7 +7,8 @@ import { useToast } from 'primevue/usetoast';
 import { WorkshopService } from "../services/workshop.service.js";
 import { ProfilesService } from "../../profile-management/services/profiles.service.js";
 import { Profile } from "../../profile-management/model/profile.entity.js";
-import {useAuthStore} from "../../iam/services/auth-store.js";
+import { useAuthStore } from "../../iam/services/auth-store.js";
+import { useRouter } from "vue-router";
 
 // Clients
 const clientItem = ref({});
@@ -28,10 +29,11 @@ provide('dialogVisibility', {
 });
 
 // Services
-const workshopId = useAuthStore().user.workshopId;
+const workshopId = useAuthStore().user?.workshopId;
 const workshopService = new WorkshopService();
 const profilesService = new ProfilesService();
 const toast = useToast();
+const router = useRouter();
 
 // Api Requests
 async function getClients() {
@@ -53,7 +55,8 @@ function openNew() {
 }
 
 function buildClientFromResponseData(client) {
-  const profile = new Profile(client);
+  let profile;
+  profile = new Profile(client);
   return profile;
 }
 
@@ -73,17 +76,17 @@ function onRejectedDeleteSelectedClients() {
 function deleteSelectedClients() {
   //TODO: Implement bulk delete
   clients.value = clients.value.filter(
-    client => {
-      if (selectedClients.value.includes(client)) {
-        profilesService.delete(client.id).then(
-          response => {
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Clients deleted', life: 3000 });
-          }
-        );
-        return false;
+      client => {
+        if (selectedClients.value.includes(client)) {
+          profilesService.delete(client.id).then(
+              response => {
+                toast.add({ severity: 'success', summary: 'Successful', detail: 'Clients deleted', life: 3000 });
+              }
+          );
+          return false;
+        }
+        return true;
       }
-      return true;
-    }
   );
 }
 
@@ -98,10 +101,10 @@ function onCreateClient(client) {
     location
   };
   workshopService.postClientToWorkshop(workshopId, newClient)
-    .then(response => {
-      clients.value = [buildClientFromResponseData(response.data), ...clients.value];
-      toast.add({ severity: 'success', summary: 'Successful', detail: 'Client registered', life: 3000 });
-    });
+      .then(response => {
+        clients.value = [buildClientFromResponseData(response.data), ...clients.value];
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Client registered', life: 3000 });
+      });
 }
 
 function confirmDeleteClient(client) {
@@ -121,17 +124,21 @@ function onRejectDeleteClient() {
 function deleteClient() {
   //TODO: Implement delete
   profilesService.delete(clientItem.value.id)
-    .then(response => {
-      clients.value = clients.value.filter(c => c.id !== clientItem.value.id);
-      toast.add({ severity: 'success', summary: 'Successful', detail: 'Client deleted', life: 3000 });
-    });
+      .then(response => {
+        clients.value = clients.value.filter(c => c.id !== clientItem.value.id);
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Client deleted', life: 3000 });
+      });
+}
+
+function navigateToClientDetails(clientId) {
+  router.push({ name: 'client-details', params: { id: clientId } });
 }
 
 onMounted(() => {
   getClients();
 });
-
 </script>
+
 <template>
   <div class="clients">
     <h2 class="header">Clients</h2>
@@ -167,12 +174,11 @@ onMounted(() => {
       >
         <pv-column selectionMode="multiple" style="width: 3rem" :exportable="false"></pv-column>
         <pv-column field="fullName" header="Full name" sortable style="width: fit-content">
-          <!--//TODO: Router link dont work-->
-          <router-link
-              :to="{ name: 'client-details', params: { id: client.id } }"
-              class="ml-2 text-white no-underline hover:underline">
-            {{ client.fullName }}
-          </router-link>
+          <template #body="slotProps">
+            <pv-button label="Details" icon="pi pi-info-circle" class="details-button" @click="navigateToClientDetails(slotProps.data.id)">
+              {{ slotProps.data.fullName }}
+            </pv-button>
+          </template>
         </pv-column>
         <pv-column field="dni" header="N° document" sortable style="width: fit-content"></pv-column>
         <pv-column field="email" header="Email" sortable style="width: fit-content"></pv-column>
@@ -278,5 +284,18 @@ onMounted(() => {
 
 .delete-icon:hover {
   color: #FF6F6F;
+}
+
+.details-button {
+  background-color: #ffffff;
+  border-color: snow;
+  color: #004B86;
+  padding: 5px 10px;
+  border-radius: 5px;
+  transition: background-color 0.1s ease;
+}
+
+.details-button:hover {
+  background-color: #004B86;
 }
 </style>
