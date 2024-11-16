@@ -43,9 +43,9 @@ export const useAuthStore = defineStore( 'auth', ()=>{
 
     function refresh(){
         token.value = localStorage.getItem('token') || '';
-        user.value.id = localStorage.getItem('userId') || 0;
-        user.value.roleId = localStorage.getItem('roleId') || 0;
-        user.value.workshopId = localStorage.getItem('workshopId') || 0;
+        user.value.id = Number(localStorage.getItem('userId')) || 0;
+        user.value.roleId = Number(localStorage.getItem('roleId')) || 0;
+        user.value.workshopId = Number(localStorage.getItem('workshopId')) || 0;
         workshopStore.workshopName = localStorage.getItem('workshopName') || '';
         if(workshopStore.workshopName === '' && user.value.workshopId !== 0){
             workshopStore.getWorkshop(Number(user.value.workshopId));

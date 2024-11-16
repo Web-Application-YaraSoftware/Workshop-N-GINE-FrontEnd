@@ -13,10 +13,6 @@ export class ProductRequestService {
         return http.post(this.resourceEndpoint, data);
     }
 
-    delete(id) {
-        return http.delete(`${this.resourceEndpoint}/${id}`);
-    }
-
     put(id, data) {
         return http.put(`${this.resourceEndpoint}/${id}`, data);
     }

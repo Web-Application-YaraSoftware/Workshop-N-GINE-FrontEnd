@@ -51,7 +51,7 @@ const fetchClientByDni = async () => {
       newIntervention.value.clientId = client.id;
 
       // Fetch the vehicles owned by this client
-      const vehiclesResponse = await vehiclesService.getByClientId(client.id);
+      const vehiclesResponse = await vehiclesService.getByUserId(client.id);
       clientVehicles.value = vehiclesResponse.data;
     } catch (error) {
       console.error('Error fetching client or vehicles:', error);

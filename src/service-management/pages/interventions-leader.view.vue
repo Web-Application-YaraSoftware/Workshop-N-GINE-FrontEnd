@@ -4,17 +4,20 @@ import {computed, onMounted, ref} from "vue";
 import {FilterMatchMode} from '@primevue/core/api';
 import {Intervention} from "../model/intervention.entity.js";
 import {Client} from "../../cmr/model/client.entity.js";
-import {InterventionType} from "../model/intervention-type.enum.js";
 import {InterventionState} from "../model/intervention-state.enum.js";
 import {useWorkshopStore} from "../services/workshop-store.js";
 import {useRouter} from "vue-router";
 import {useAuthStore} from "../../iam/services/auth-store.js";
 import {WorkshopService} from "../services/workshop.service.js";
+import {ProfilesService} from "../../profile-management/services/profiles.service.js";
+import {VehiclesService} from "../../cmr/services/vehicles.service.js";
 
 // Services
 const authenticationStore = useAuthStore();
 const workshopStore = useWorkshopStore();
 const workshopService = new WorkshopService();
+const profileService = new ProfilesService();
+const vehicleService = new VehiclesService();
 const router = useRouter();
 const toast = useToast();
 // Table configuration
@@ -47,9 +50,15 @@ const statusOptions = [
 ]
 // Data
 const interventions = ref([]);
+const vehicle = ref(null);
+
 const interventionWithClientName = computed(() => {
   return interventions.value.map(intervention => {
-    const client = clients.value.find(client => client?.id === intervention?.clientId);
+    vehicleService.getById(intervention?.vehicleId)
+        .then( response => {
+          vehicle.value = response.data;
+        });
+    const client = clients.value.find(client => client?.userId === vehicle.value.userId);
     return {
       ...intervention,
       client: client ? client?.fullName : 'Unknown'
@@ -89,9 +98,8 @@ function buildDataFromResponseData(interventions){
 function getClients(){
   workshopService.getClientsUserIdByWorkShopId(authenticationStore.user.workshopId)
       .then(
-          (response) =>
-          {
-            clients.value = buildClientsDataFromResponseData(response.data);
+          async (response) => {
+            clients.value = await buildClientsDataFromResponseData(response.data);
           },
           () =>
           {
@@ -100,8 +108,20 @@ function getClients(){
       );
 }
 
-function buildClientsDataFromResponseData(clients){
-  return clients.map(client => new Client(client));
+function buildClientsDataFromResponseData(userIds){
+  const clientPromises = userIds.map(userId =>
+      profileService.getProfileByUserId(userId)
+          .then(response => new Client(response.data))
+  );
+
+  return Promise.all(clientPromises)
+      .then(clients => {
+        return clients;
+      })
+      .catch(error => {
+        console.error(error);
+        return [];
+      });
 }
 
 // Events
@@ -157,18 +177,18 @@ function onRowSelect(data){
       </pv-column>
       <pv-column field="registrationDate" filterField="registrationDate" header="Date" sortable>
         <template #body="{ data }">
-          {{data.registrationDate.toLocaleDateString()}}
+          {{data.scheduledDate.toLocaleDateString()}}
         </template>
       </pv-column>
       <pv-column field="interventionType" filterField="interventionType" header="Type" sortable>
         <template #body="{ data }">
-          {{InterventionType.getName(data.interventionType)}}
+          {{data.type}}
         </template>
       </pv-column>
       <pv-column field="state" filterField="state" header="Status">
         <template #body="{ data }">
-          <pv-tag :severity="getStatusSeverity(data.state)">
-            {{ InterventionState.getName(data.state) }}
+          <pv-tag :severity="getStatusSeverity(data.status)">
+            {{ data.status }}
           </pv-tag>
         </template>
         <template #filter="{ filterModel }">
