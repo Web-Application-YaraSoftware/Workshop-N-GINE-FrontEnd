@@ -50,44 +50,52 @@ const statusOptions = [
 ]
 // Data
 const interventions = ref([]);
-const vehicle = ref(null);
+const vehicles = ref([]);
+const clients = ref([]);
 
 const interventionWithClientName = computed(() => {
   return interventions.value.map(intervention => {
-    vehicleService.getById(intervention?.vehicleId)
-        .then( response => {
-          vehicle.value = response.data;
-        });
-    const client = clients.value.find(client => client?.userId === vehicle.value.userId);
+    const vehicle = vehicles.value.find(vehicle => vehicle?.id === intervention.vehicleId);
+    const client = clients.value.find(client => client?.userId === vehicle?.userId);
     return {
       ...intervention,
-      client: client ? client?.fullName : 'Unknown'
-    }
+      client: client ? client.fullName : 'Unknown'
+    };
   });
 });
-const clients = ref([]);
 
-onMounted(() => {
-  getInterventions();
-  getClients();
+onMounted(async () => {
+  loading.value = true;
+  try {
+    await getInterventions();
+    await getVehicles();
+    await getClients();
+  } catch (error) {
+    console.error("Error loading data:", error);
+    toast.add({
+      severity: 'error', summary: 'Data loading failed', detail: 'An error occurred while loading data', life: 3000 });
+  } finally {
+    loading.value = false;
+  }
 });
 
+
 // Methods
+
 function getInterventions() {
   const userId = authenticationStore.user.id;
   const workshopId = authenticationStore.user.workshopId;
-  workshopService.getAllInterventionsByMechanicLeaderId(workshopId, userId)
-      .then(
-          (response) => {
-            interventions.value = buildDataFromResponseData(response.data);
-            loading.value = false;
-          },
-          () => {
-            toast.add({ severity: 'error', summary: 'Interventions not loaded', detail: 'An error occurred while loading interventions data', life: 3000 });
-            loading.value = false;
-          }
-      );
+  return workshopService.getAllInterventionsByMechanicLeaderId(workshopId, userId)
+      .then(response => {
+        interventions.value = buildDataFromResponseData(response.data);
+      })
+      .catch(() => {
+        toast.add({
+          severity: 'error', summary: 'Interventions not loaded', detail: 'An error occurred while loading interventions data', life: 3000 });
+      });
 }
+
+
 
 function buildDataFromResponseData(interventions){
   return interventions.map(intervention => {
@@ -121,6 +129,22 @@ function buildClientsDataFromResponseData(userIds){
       .catch(error => {
         console.error(error);
         return [];
+      });
+}
+
+function getVehicles() {
+  console.log(interventions.value);
+  const vehiclePromises = interventions.value.map(intervention => {
+    return vehicleService.getById(intervention?.vehicleId)
+        .then(response => {
+          vehicles.value.push(response.data);
+        });
+  });
+  return Promise.all(vehiclePromises)
+      .catch(error => {
+        console.error("Error loading vehicles:", error);
+        toast.add({
+          severity: 'error', summary: 'Vehicles not loaded', detail: 'An error occurred while loading vehicles data', life: 3000,});
       });
 }
 

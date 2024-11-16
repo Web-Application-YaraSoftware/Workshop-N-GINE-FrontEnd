@@ -3,21 +3,26 @@ import {useToast} from "primevue/usetoast";
 import {computed, onMounted, ref} from "vue";
 import {FilterMatchMode} from '@primevue/core/api';
 import {InterventionsService} from "../services/interventions.service.js";
-import {TasksService} from "../services/tasks.service.js";
-import {ClientsService} from "../../cmr/services/clients.service.js";
 import {Intervention} from "../model/intervention.entity.js";
 import {Task} from "../model/task.entity.js";
 import {Client} from "../../cmr/model/client.entity.js";
-import {InterventionType} from "../model/intervention-type.enum.js";
 import {InterventionState} from "../model/intervention-state.enum.js";
 import {useWorkshopStore} from "../services/workshop-store.js";
 import {useRouter} from "vue-router";
+import {useAuthStore} from "../../iam/services/auth-store.js";
+import {WorkshopService} from "../services/workshop.service.js";
+import {ProfilesService} from "../../profile-management/services/profiles.service.js";
+import {VehiclesService} from "../../cmr/services/vehicles.service.js";
 
 // Services
+const authenticationStore = useAuthStore();
 const workshopStore = useWorkshopStore();
 const interventionService = new InterventionsService();
-const taskService = new TasksService();
-const clientService = new ClientsService();
+const workshopService = new WorkshopService();
+const profileService = new ProfilesService();
+const vehicleService = new VehiclesService();
+const profile = ref({});
+const vehicles = ref([]);
 const router = useRouter();
 const toast = useToast();
 // Table configuration
@@ -44,9 +49,10 @@ const getStatusSeverity = (status) => {
   }
 };
 const statusOptions = [
-  { label: InterventionState.getName(0), value: 0 },
   { label: InterventionState.getName(1), value: 1 },
-  { label: InterventionState.getName(2), value: 2 }
+  { label: InterventionState.getName(2), value: 2 },
+  { label: InterventionState.getName(3), value: 3 },
+  { label: InterventionState.getName(4), value: 4 },
 ]
 // Data
 const tasks = ref([]);
@@ -54,46 +60,64 @@ const interventions = ref([]);
 const clients = ref([]);
 const interventionsFiltered = computed(() => {
   return interventions.value.filter(intervention => {
-    return !tasks.value.some(task => task.assistantId === intervention.mechanicLeaderId) && tasks.value.some(task => task.interventionId === intervention.id);
-  });
-});
-const interventionsWithClientName = computed(() => {
-  return interventionsFiltered.value.map(intervention => {
-    const client = clients.value.find(client => client?.id === intervention?.clientId);
-    return {
-      ...intervention,
-      client: client ? client?.fullName : 'Unknown'
-    }
+    return tasks.value.some(task => task.interventionId === intervention.id);
   });
 });
 
-onMounted(() => {
-  getInterventions();
-  getTasksByMechanicId();
-  getClients();
+const interventionsWithClientName = computed(() => {
+  return interventions.value.map(intervention => {
+    const vehicle = vehicles.value.find(vehicle => vehicle?.id === intervention.vehicleId);
+    const client = clients.value.find(client => client?.userId === vehicle?.userId);
+    return {
+      ...intervention,
+      client: client ? client.fullName : 'Unknown'
+    };
+  });
+});
+
+onMounted(async () => {
+  loading.value = true;
+  try {
+    await getInterventions();
+    await getTasksByMechanicId();
+    await getVehicles();
+    await getClients();
+  } catch (error) {
+    console.error("Error loading data:", error);
+    toast.add({
+      severity: 'error', summary: 'Data loading failed', detail: 'An error occurred while loading data', life: 3000 });
+  } finally {
+    loading.value = false;
+  }
 });
 
 // Methods
 function getInterventions() {
-  const userId = workshopStore.user.id;
-  interventionService.getAllByMechanicAssistantId(userId)
+
+  return profileService.getProfileByUserId(authenticationStore.user.id)
       .then(
           (response) => {
-            interventions.value = buildDataFromResponseData(response.data);
-            loading.value = false;
+            profile.value = response.data;
+
+            const workshopId = authenticationStore.user.workshopId;
+            return workshopService.getAllInterventionsByMechanicAssistantId(workshopId, profile.value.id)
+                .then(
+                    (response) => {
+                      interventions.value = buildDataFromResponseData(response.data);
+                      getTasksByMechanicId();
+                      loading.value = false;
+                    },
+                    () => {
+                      toast.add({ severity: 'error', summary: 'Interventions not loaded', detail: 'An error occurred while loading interventions data', life: 3000 });
+                      loading.value = false;
+                    }
+                );
           },
           () => {
-            toast.add({ severity: 'error', summary: 'Interventions not loaded', detail: 'An error occurred while loading interventions data', life: 3000 });
-            loading.value = false;
+            toast.add({ severity: 'error', summary: 'Profile not loaded', detail: 'An error occurred while loading profile data', life: 3000 });
           }
       );
-}
-// TODO: Delete id when the backend is ready
-function getTasksByMechanicId(){
-  taskService.getAllByMechanicId(workshopStore.user.id)
-    .then(
-        response => { tasks.value = response.data.map(task => new Task(task))}
-    );
+
 }
 
 function buildDataFromResponseData(interventions){
@@ -102,22 +126,62 @@ function buildDataFromResponseData(interventions){
   });
 }
 
-function getClients(){
-  clientService.getAllByWorkshop(workshopStore.workshop.id)
-    .then(
-        (response) =>
-        {
-          clients.value = buildClientsDataFromResponseData(response.data);
-        },
-        () =>
-        {
-          toast.add({ severity: 'error', summary: 'Clients not loaded', detail: 'An error occurred while loading clients data', life: 3000 })
-        }
-    );
+
+function getTasksByMechanicId(){
+  interventions.value.forEach(intervention => {
+    interventionService.getAllTasksByMechanicIdAndInterventionId(profile.value.id, intervention.id)
+        .then(
+            response => {
+              tasks.value = response.data.map(task => new Task(task));
+
+            }
+        );
+  });
 }
 
-function buildClientsDataFromResponseData(clients){
-  return clients.map(client => new Client(client));
+function getClients(){
+  workshopService.getClientsUserIdByWorkShopId(authenticationStore.user.workshopId)
+      .then(
+          async (response) => {
+            clients.value = await buildClientsDataFromResponseData(response.data);
+          },
+          () =>
+          {
+            toast.add({ severity: 'error', summary: 'Clients not loaded', detail: 'An error occurred while loading clients data', life: 3000 })
+          }
+      );
+}
+
+function buildClientsDataFromResponseData(userIds){
+  const clientPromises = userIds.map(userId =>
+      profileService.getProfileByUserId(userId)
+          .then(response => new Client(response.data))
+  );
+
+  return Promise.all(clientPromises)
+      .then(clients => {
+        return clients;
+      })
+      .catch(error => {
+        console.error(error);
+        return [];
+      });
+}
+
+function getVehicles() {
+  console.log(interventions.value);
+  const vehiclePromises = interventions.value.map(intervention => {
+    return vehicleService.getById(intervention?.vehicleId)
+        .then(response => {
+          vehicles.value.push(response.data);
+        });
+  });
+  return Promise.all(vehiclePromises)
+      .catch(error => {
+        console.error("Error loading vehicles:", error);
+        toast.add({
+          severity: 'error', summary: 'Vehicles not loaded', detail: 'An error occurred while loading vehicles data', life: 3000,});
+      });
 }
 
 // Events
@@ -173,18 +237,18 @@ function onRowSelect(data){
       </pv-column>
       <pv-column field="registrationDate" filterField="registrationDate" header="Date" sortable>
         <template #body="{ data }">
-          {{data.registrationDate.toLocaleDateString()}}
+          {{data.scheduledDate.toLocaleDateString()}}
         </template>
       </pv-column>
       <pv-column field="interventionType" filterField="interventionType" header="Type" sortable>
         <template #body="{ data }">
-          {{InterventionType.getName(data.interventionType)}}
+          {{data.type}}
         </template>
       </pv-column>
       <pv-column field="state" filterField="state" header="Status">
         <template #body="{ data }">
-          <pv-tag :severity="getStatusSeverity(data.state)">
-            {{ InterventionState.getName(data.state) }}
+          <pv-tag :severity="getStatusSeverity(data.status)">
+            {{ data.status }}
           </pv-tag>
         </template>
         <template #filter="{ filterModel }">

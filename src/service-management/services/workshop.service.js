@@ -29,6 +29,10 @@ export class WorkshopService {
         return http.get(`${this.resourceEndPoint}/${workshopId}/interventions?mechanicLeaderId=${mechanicLeaderId}`);
     }
 
+    getAllInterventionsByMechanicAssistantId(workshopId, mechanicAssistantId) {
+        return http.get(`${this.resourceEndPoint}/${workshopId}/interventions?mechanicAssitantId=${mechanicAssistantId}`);
+    }
+
 
 
 }
