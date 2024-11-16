@@ -13,8 +13,8 @@ const props = defineProps({
 const notificationsService = new NotificationService();
 
 function changeIcon(){
-  if(props.notification.state === 1){
-    notificationsService.updateState(props.notification, 0)
+  if(props.notification.stateId === 2){
+    notificationsService.updateState(props.notification, 1)
   }
 }
 
@@ -23,7 +23,7 @@ function changeIcon(){
 <template>
   <article class="notification-item">
     <div class="icon">
-      <span v-if="notification.state === 1" class="pi pi-bell" style="scale: 2.5"></span>
+      <span v-if="notification.stateId === 2" class="pi pi-bell" style="scale: 2.5"></span>
       <span v-else class="pi pi-bell-slash" style="scale: 2.5"></span>
     </div>
     <div class="content">
