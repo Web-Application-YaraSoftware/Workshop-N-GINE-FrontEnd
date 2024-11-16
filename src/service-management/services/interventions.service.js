@@ -7,14 +7,6 @@ export class InterventionsService {
         return http.get(`${this.resourceEndPoint}`);
     }
 
-    getAllByMechanicLeaderId(id) {
-        return http.get(`${this.resourceEndPoint}?mechanicLeaderId=${id}`);
-    }
-
-    getAllByMechanicAssistantId(id) {
-        return http.get(`${this.resourceEndPoint}`);
-    }
-
     getAllByVehicleId(id) {
         return http.get(`${this.resourceEndPoint}?vehicleId=${id}`);
     }
@@ -27,10 +19,6 @@ export class InterventionsService {
         return http.post(`${this.resourceEndPoint}`, data);
     }
 
-    delete(id) {
-        return http.delete(`${this.resourceEndPoint}/${id}`);
-    }
-
     put(id, data) {
         return http.put(`${this.resourceEndPoint}/${id}`, data);
     }
@@ -39,12 +27,9 @@ export class InterventionsService {
     getAllTasksByInterventionId(interventionId) {
         return http.get(`${this.resourceEndPoint}/${interventionId}/tasks`);
     }
-    //TODO: assistant es mechanic leader nomas
-    getAllByMechanicId(id, interventionId) {
-        return http.get(`${this.resourceEndPoint}/${interventionId}/tasks?assistantId=${id}`);
-    }
-    getAllTasksByMechanicIdAndInterventionId(leaderId, interventionId) {
-        return http.get(`${this.resourceEndPoint}/${interventionId}/tasks?mechanicLeaderId=${leaderId}`);
+    //mechanicLeader hace mencion al leader de la task (assigned), no al leader de la intervencion
+    getAllTasksByMechanicIdAndInterventionId(mechanicAssignedId, interventionId) {
+        return http.get(`${this.resourceEndPoint}/${interventionId}/tasks?mechanicLeaderId=${mechanicAssignedId}`);
     }
 
     postTask(data, interventionId) {
