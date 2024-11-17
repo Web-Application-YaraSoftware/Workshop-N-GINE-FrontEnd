@@ -67,7 +67,7 @@ const interventionsFiltered = computed(() => {
 const interventionsWithClientName = computed(() => {
   return interventions.value.map(intervention => {
     const vehicle = vehicles.value.find(vehicle => vehicle?.id === intervention.vehicleId);
-    const client = clients.value.find(client => client?.userId === vehicle?.userId);
+    const client = clients.value.find(client => client?.id === vehicle?.userId);
     return {
       ...intervention,
       client: client ? client.fullName : 'Unknown'
