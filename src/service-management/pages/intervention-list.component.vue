@@ -11,6 +11,7 @@ import {Intervention} from '../model/intervention.entity.js';
 import NewInterventionDialog from '../components/new-intervention-dialog.component.vue';
 import {useAuthStore} from "../../iam/services/auth-store.js";
 import {useToast} from "primevue/usetoast";
+import {formatDate} from "../../shared/services/date.service.js";
 
 const router = useRouter();
 const interventionsService = new InterventionsService();
@@ -254,7 +255,7 @@ const goToInterventionDetail = (id) => {
         <pv-column field="registrationDate" header="Registration Date" sortable>
           <template #body="slotProps">
             <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
-              {{ slotProps.data.createdAt }}
+              {{ formatDate(slotProps.data.scheduledDate) }}
             </span>
           </template>
         </pv-column>

@@ -7,7 +7,7 @@ export class ProductRequest {
                     productId = 0,
                     workshopId = 0,
                     taskId = 0,
-                    status = ProductRequestState.PENDING
+                    status = ''
                 } = {}) {
         this.id = id;
         this.requestedQuantity = requestedQuantity;

@@ -13,7 +13,6 @@ import { useToast } from "primevue/usetoast";
 import {computed, onMounted, ref, watch, watchEffect} from "vue";
 import {useAuthStore} from "../../iam/services/auth-store.js";
 import {InterventionsService} from "../services/interventions.service.js";
-import {ProfilesService} from "../../profile-management/services/profiles.service.js";
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -28,13 +27,12 @@ const props = defineProps({
 const interventionService = new InterventionsService();
 const productStockService = new ProductStockService();
 const productRequestService = new ProductRequestService();
-const profileService = new ProfilesService();
 const authenticationStore = useAuthStore();
+
 const productsStock = ref([]);
 const productsRequests = ref([]);
 const checkpoints = ref([]);
 const tasks = ref([]);
-const profile = ref(null);
 const totalTasks = computed(() => tasks.value.length);
 const selectedTask = ref();
 const selectedTaskId = computed(() => selectedTask.value? selectedTask.value?.id: 0);
@@ -55,11 +53,13 @@ watchEffect(() => {
   if (selectedTask.value !== 0 && selectedTask.value) {
     getProductRequests();
     getCheckpoint();
+    if(selectedTaskId.value !== 0 && selectedTask.value.status === 'Pending'){
+      startTask(selectedTaskId.value);
+    }
   }
 });
 
 onMounted(() => {
-  getProfile();
   getTasks();
   selectedOption.value = options.value[0];
   getProductsStock();
@@ -81,18 +81,8 @@ function handleOptionChange(option) {
   selectedOption.value = option;
 }
 
-async function getProfile() {
-  try {
-    const response = await profileService.getProfileByUserId(authenticationStore.user.id);
-    profile.value = response.data;
-  } catch (error) {
-    console.error(error);
-  }
-}
-
 async function getTasks() {
-  await getProfile();
-  interventionService.getAllTasksByMechanicIdAndInterventionId(profile.value.id, props.intervention?.id)
+  interventionService.getAllTasksByMechanicIdAndInterventionId(authenticationStore.user.id, props.intervention?.id)
       .then(
           response => {
             tasks.value = buildTasksFromResponseData(response.data);
@@ -158,11 +148,12 @@ function buildCheckpointsFromResponseData(data){
 
 
 function onRequestAddProductRequest(productRequest){
-  const newProductRequest = new ProductRequest();
-  newProductRequest.workshopId = authenticationStore.user.workshopId;
-  newProductRequest.taskId = selectedTask.value.id;
-  newProductRequest.productId = productRequest.productType;
-  newProductRequest.requestedQuantity = Number(productRequest.quantity);
+  const response = {
+    requestedQuantity : productRequest.requestedQuantity,
+    productId: productRequest.productId,
+    taskId: selectedTaskId.value,
+    workshopId: authenticationStore?.user?.workshopId
+  }
 
   confirm.require({
     message: `Are you sure you want to add the product request?`,
@@ -180,7 +171,7 @@ function onRequestAddProductRequest(productRequest){
       size: 'small'
     },
     accept: () => {
-      addProductRequest(newProductRequest);
+      addProductRequest(response);
     }
   });
 }
@@ -200,6 +191,12 @@ function addProductRequest(productRequest){
 
 
 function onRequestUpdateProductRequest(productRequest){
+  const response = {
+    requestedQuantity : productRequest.requestedQuantity,
+    productId: productRequest.productId,
+    id: productRequest.id
+  }
+
   confirm.require({
     message: `Are you sure you want to update the product request?`,
     header: "Confirmation",
@@ -216,7 +213,7 @@ function onRequestUpdateProductRequest(productRequest){
       size: 'small'
     },
     accept: () => {
-      updateProductRequest(productRequest);
+      updateProductRequest(response);
     }
   });
 }
@@ -367,11 +364,13 @@ function onFinishTask(){
 }
 
 function finishTask(){
-  const finishedTask = new Task(selectedTask.value);
-  finishedTask.finishTask();
-  interventionService.putTask(finishedTask.id, finishedTask, props.intervention?.id)
+  const taskId = selectedTaskId.value;
+  const interventionId = props.intervention?.id;
+  if(selectedTask.value.status === "Completed" || selectedTask.value.status === "Pending") return;
+  interventionService.finishTask(taskId, interventionId)
       .then(
           () => {
+            getTasks();
             toast.add({severity: 'success', summary: 'Success', detail: 'Task finished successfully', life: 4000});
             goNextTask();
           },
@@ -386,6 +385,19 @@ function goNextTask(){
   if (currentTaskIndex < totalTasks.value - 1) {
     selectedTask.value = tasks.value[currentTaskIndex + 1];
   }
+}
+
+function startTask(taskId){
+  interventionService.startTask(taskId, props.intervention?.id)
+      .then(
+          () => {
+            getTasks();
+            toast.add({severity: 'success', summary: 'Success', detail: 'Task started', life: 3000});
+          },
+          () => {
+            toast.add({severity: 'error', summary: 'Task not started', detail: 'An error occurred while starting the task', life: 3000});
+          }
+      )
 }
 
 </script>

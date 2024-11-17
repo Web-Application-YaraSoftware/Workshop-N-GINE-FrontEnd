@@ -6,8 +6,7 @@ import { nextTick, ref } from "vue";
 const props = defineProps({
   iotInformation: {
     type: IoTDevice,
-    required: false,
-    default: new IoTDevice()
+    default: null
   }
 });
 const selectedCode = ref();

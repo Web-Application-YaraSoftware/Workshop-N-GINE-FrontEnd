@@ -8,16 +8,12 @@ import ActivityExecution from "../components/activity-execution.component.vue";
 import ActivityMonitoring from "../components/activity-monitoring.component.vue";
 import {Intervention} from "../model/intervention.entity.js";
 import {InterventionsService} from "../services/interventions.service.js";
-import {TasksService} from "../services/tasks.service.js";
 import { useConfirm } from "primevue/useconfirm";
 import {useToast} from "primevue/usetoast";
 import {useAuthStore} from "../../iam/services/auth-store.js";
-import {ProfilesService} from "../../profile-management/services/profiles.service.js";
 
 const router = useRouter();
 const route = useRoute();
-const profile = ref(null);
-const profileService = new ProfilesService();
 const authenticationStore = useAuthStore();
 const workshopStore = useWorkshopStore();
 const hasTasks = ref(true);
@@ -63,13 +59,11 @@ const currentTotalSteps = computed(() => stepsFiltered.value.length);
 const activeStep = ref(1);
 const intervention = ref(new Intervention());
 const interventionService = new InterventionsService();
-const tasksService = new TasksService();
 const confirm = useConfirm();
 const toast = useToast();
 const parentAction = ref(false);
 
 onMounted(() => {
-  validateMechanicType();
   getIntervention();
 })
 
@@ -77,29 +71,16 @@ watchEffect(() => {
   verifyRoute();
 });
 
-function validateMechanicType(){
-  // TODO: When the backend is ready again set the mechanic type with and endpoint
-  // Delete this above
-  if(!workshopStore.mechanicType) workshopStore.setLeader();
-}
-
 function areThereTasks(){
-  const interventionId = Number(router.currentRoute.value.params.id);
-  profileService.getProfileByUserId(authenticationStore.user.id)
-      .then( response => {
-        profile.value = response.data;
-
-        interventionService.getAllTasksByMechanicIdAndInterventionId(profile.value.id, interventionId)
-            .then(
-                (response) => {
-                  hasTasks.value = response.data.length > 0;
-                },
-                () => {
-                  toast.add({severity: 'error', summary: 'Tasks not loaded', detail: 'An error occurred while loading tasks data', life: 3000});
-                }
-            )
-      });
-
+    interventionService.getAllTasksByMechanicIdAndInterventionId(authenticationStore.user.id, router.currentRoute.value.params.id)
+        .then(
+            (response) => {
+              hasTasks.value = response.data.length > 0;
+            },
+            () => {
+              toast.add({severity: 'error', summary: 'Tasks not loaded', detail: 'An error occurred while loading tasks data', life: 3000});
+            }
+        )
 }
 
 function verifyRoute(){
@@ -190,7 +171,23 @@ function restartSteps(){
 function onUpdateRoute(step){
   areThereTasks();
   router.push({query: {step: step}});
+  startIntervention(step);
   notifyChildren();
+}
+
+function startIntervention(step){
+  if(Number(step) === 2 && intervention.value.status === 'Pending'){
+    interventionService.startIntervention(intervention.value.id)
+        .then(
+            () => {
+              getIntervention();
+              toast.add({severity: 'success', summary: 'Success', detail: 'Intervention started', life: 3000});
+            },
+            () => {
+              toast.add({severity: 'error', summary: 'Intervention not started', detail: 'An error occurred while starting the intervention', life: 3000});
+            }
+        )
+  }
 }
 
 function onFinishIntervention(){
@@ -217,12 +214,16 @@ function onFinishIntervention(){
 }
 
 function finishIntervention(){
-  intervention.value.finish();
-  interventionService.put(intervention.value.id, intervention.value)
+  if(intervention.value.status !== 'In Progress'){
+    toast.add({severity: 'error', summary: 'Intervention not finished', detail: 'The intervention is not in progress', life: 3000});
+    return;
+  }
+  interventionService.finishIntervention(intervention.value.id)
       .then(
           () => {
-            toast.add({severity: 'success', summary: 'Success', detail: 'Intervention finished', life: 3000});
+            getIntervention();
             goToActivities();
+            toast.add({severity: 'success', summary: 'Success', detail: 'Intervention finished', life: 3000});
           },
           () => {
             toast.add({severity: 'error', summary: 'Intervention not finished', detail: 'An error occurred while finishing the intervention', life: 3000});

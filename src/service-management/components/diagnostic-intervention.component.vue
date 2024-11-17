@@ -1,7 +1,6 @@
 <script setup>
 import {Intervention} from "../model/intervention.entity.js";
 import {computed, ref, watch} from "vue";
-import {InterventionType} from "../model/intervention-type.enum.js";
 
 const props = defineProps({
   intervention: {
@@ -12,18 +11,18 @@ const props = defineProps({
 });
 const emit = defineEmits(['confirm:updatedIntervention']);
 const selectedIntervention = ref({
-  interventionType: 0,
+  type: '',
   description: ''
 });
-const isEditMode = computed(() => selectedIntervention.value.interventionType !== props.intervention?.interventionType || selectedIntervention.value.description !== props.intervention?.description);
+const isEditMode = computed(() => selectedIntervention.value.type !== props.intervention?.type || selectedIntervention.value.description !== props.intervention?.description);
 const interventionTypes = ref([
-  {value: InterventionType.MAINTENANCE, label: InterventionType.getName(InterventionType.MAINTENANCE)},
-  {value: InterventionType.REPARATION, label: InterventionType.getName(InterventionType.REPARATION)},
+  {value: 'Maintenance', label: 'Maintenance'},
+  {value: 'Reparation', label: 'Reparation'},
 ]);
 
 watch(() => props.intervention, () => {
   selectedIntervention.value = {
-    interventionType: props.intervention?.interventionType,
+    type: props.intervention?.type,
     description: props.intervention?.description
   };
 }, {immediate: true});
@@ -38,7 +37,7 @@ function onRequestCancel(){
 
 function resetValues(){
   selectedIntervention.value = {
-    interventionType: props.intervention?.interventionType,
+    type: props.intervention?.type,
     description: props.intervention?.description
   };
 }
@@ -51,7 +50,7 @@ function resetValues(){
       <pv-inputgroupaddon>
         <i class="pi pi-wrench"></i>
       </pv-inputgroupaddon>
-      <pv-select v-model="selectedIntervention.interventionType" :options="interventionTypes" optionLabel="label" optionValue="value" fluid/>
+      <pv-select v-model="selectedIntervention.type" :options="interventionTypes" optionLabel="label" optionValue="value" fluid/>
     </pv-inputgroup>
     <pv-inputgroup>
       <pv-inputgroupaddon>
