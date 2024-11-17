@@ -6,7 +6,7 @@ export class Intervention {
                     workshopId = 0,
                     vehicleId = 0,
                     mechanicLeaderId = 0,
-                    scheduledAt = '',
+                    scheduledDate = '',
                     startedAt = '',
                     completedAt = '',
                     type = '',
@@ -17,7 +17,7 @@ export class Intervention {
         this.workshopId = workshopId;
         this.mechanicLeaderId = mechanicLeaderId;
         this.vehicleId = vehicleId;
-        this.scheduledDate = scheduledAt ? new Date(scheduledAt) : new Date();
+        this.scheduledDate = scheduledDate ? new Date(scheduledDate) : new Date();
         this.createdAt = startedAt ? new Date(startedAt) : new Date();
         this.updatedAt = completedAt ? new Date(completedAt) : null;
         this.type = type;
