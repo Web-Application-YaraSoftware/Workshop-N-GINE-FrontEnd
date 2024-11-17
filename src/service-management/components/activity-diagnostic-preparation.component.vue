@@ -221,11 +221,15 @@ function onRequestUpdateIntervention(intervention){
       size: 'small'
     },
     accept: () => {
-      let interventionToUpdate = new Intervention();
-      interventionToUpdate = props.intervention;
-      interventionToUpdate.interventionType = intervention.interventionType;
-      interventionToUpdate.description = intervention.description;
-      updateIntervention(interventionToUpdate);
+      let response = {
+        id: props.intervention?.id,
+        vehicleId: props.intervention?.vehicleId,
+        mechanicLeaderId: props.intervention?.mechanicLeaderId,
+        type: intervention.type === 'Reparation' ? 1 : 2,
+        description: intervention.description,
+        scheduledAt: props.intervention?.scheduledDate
+      }
+      updateIntervention(response);
     }
   });
 }
@@ -233,8 +237,8 @@ function onRequestUpdateIntervention(intervention){
 function updateIntervention(intervention) {
   interventionService.put(intervention.id, intervention)
       .then(
-          (r) => {
-            console.log(r)
+          () => {
+            emit('confirm:updatedIntervention');
             toast.add({severity: 'success', summary: 'Success', detail: 'Intervention updated successfully', life: 4000});
           },
           () => {
