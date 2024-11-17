@@ -5,6 +5,10 @@ export class ProfilesService {
         return http.get(`/profiles?userId=${userId}`);
     }
 
+    getByDNI(dni) {
+        return http.get(`/profiles?dni=${dni}`);
+    }
+
     getById(profileId) {
         return http.get(`/profiles/${profileId}`);
     }

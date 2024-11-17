@@ -102,7 +102,7 @@ function onCreateClient(client) {
   };
   workshopService.postClientToWorkshop(workshopId, newClient)
       .then(response => {
-        clients.value = [buildClientFromResponseData(response.data), ...clients.value];
+        getClients();
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Client registered', life: 3000 });
       });
 }
@@ -175,7 +175,7 @@ onMounted(() => {
         <pv-column selectionMode="multiple" style="width: 3rem" :exportable="false"></pv-column>
         <pv-column field="fullName" header="Full name" sortable style="width: fit-content">
           <template #body="slotProps">
-            <pv-button label="Details" icon="pi pi-info-circle" class="details-button" @click="navigateToClientDetails(slotProps.data.id)">
+            <pv-button label="Details" icon="pi pi-info-circle" class="details-button" @click="navigateToClientDetails(slotProps.data.userId)">
               {{ slotProps.data.fullName }}
             </pv-button>
           </template>

@@ -1,17 +1,16 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { InterventionsService } from '../services/interventions.service.js';
-import { ProfilesService } from '../../profile-management/services/profiles.service.js';
-import { VehicleService } from '../services/vehicle.service.js';
-import { WorkshopService } from '../services/workshop.service.js';
-import { Profile } from '../../profile-management/model/profile.entity.js';
-import { Vehicle } from '../model/vehicle.entity.js';
-import { Intervention } from '../model/intervention.entity.js';
-import { InterventionState } from '../model/intervention-state.enum.js';
-import { InterventionType } from '../model/intervention-type.enum.js';
+import {computed, onMounted, ref, watchEffect} from 'vue';
+import {useRouter} from 'vue-router';
+import {InterventionsService} from '../services/interventions.service.js';
+import {ProfilesService} from '../../profile-management/services/profiles.service.js';
+import {VehicleService} from '../services/vehicle.service.js';
+import {WorkshopService} from '../services/workshop.service.js';
+import {Profile} from '../../profile-management/model/profile.entity.js';
+import {Vehicle} from '../model/vehicle.entity.js';
+import {Intervention} from '../model/intervention.entity.js';
 import NewInterventionDialog from '../components/new-intervention-dialog.component.vue';
-import { useAuthStore } from "../../iam/services/auth-store.js";
+import {useAuthStore} from "../../iam/services/auth-store.js";
+import {useToast} from "primevue/usetoast";
 
 const router = useRouter();
 const interventionsService = new InterventionsService();
@@ -19,8 +18,14 @@ const profilesService = new ProfilesService();
 const vehiclesService = new VehicleService();
 const workshopService = new WorkshopService();
 const authStore = useAuthStore();
-
+const toast = useToast();
 const interventions = ref([]);
+const interventionsData = ref([]);
+const filteredInterventions = computed(() => {
+  if (selectedStatus.value === 'All') return interventionsData.value;
+  return interventionsData.value.filter((intervention) => intervention?.status === selectedStatus.value);
+});
+
 const noInterventions = ref(false);
 const filters = ref({ global: { value: '' } });
 const selectedStatus = ref('All');
@@ -28,83 +33,59 @@ const loading = ref(false);
 const isDialogVisible = ref(false);
 const isTableView = ref(true);
 
-const createProfile = (profileData) => new Profile(profileData);
-const createVehicle = (vehicleData) => new Vehicle(vehicleData);
+onMounted(() => {
+  getInterventions();
+});
+watchEffect(async () => {
+  interventionsData.value = await Promise.all(interventions.value.map(async (intervention) => {
+    const vehicle = await getVehicleById(intervention?.vehicleId);
+    const mechanic = await getProfileByUserId(intervention?.mechanicLeaderId);
+    const client = await getProfileByUserId(vehicle?.userId);
+    return {
+      ...intervention,
+      clientFirstName: client.firstName,
+      clientLastName: client.lastName,
+      vehicleLicensePlate: vehicle.licensePlate,
+      vehicleModel: vehicle.fullName,
+      mechanicLeader: mechanic.fullName,
+    };
+  }));
+});
 
-const getProfileByVehicleId = (vehicleId) => {
-  return vehiclesService.getById(vehicleId)
-      .then(response => profilesService.getById(response.data.userId))
-      .then(response => createProfile(response.data));
-};
-
-const getVehicle = (vehicleId) => {
-  return vehiclesService.getById(vehicleId)
-      .then(response => createVehicle(response.data));
-};
-
-const getPersonnel = (workshopId) => {
-  return workshopService.getMechanicsUserIdByWorkshopId(workshopId)
-      .then(response => response.data.map(mechanic => ({
-        id: mechanic.id,
-        fullName: mechanic.fullName
-      })));
-};
-
-const enrichInterventionData = (intervention, client, vehicle, mechanicLeader, mechanics) => {
-  const mechanic = mechanics.find(m => m.id === intervention.mechanicLeaderId);
-  return {
-    ...intervention,
-    client,
-    vehicle,
-    mechanicLeader,
-    mechanic: mechanic ? mechanic.fullName : 'N/A',
-    interventionTypeName: InterventionType.getName(intervention.type),
-    stateName: InterventionState.getName(intervention.status)
-  };
-};
-
-const getAndEnrichIntervention = (interventionData, mechanics) => {
-  const intervention = new Intervention(interventionData);
-
-  return Promise.all([
-    getProfileByVehicleId(intervention.vehicleId),
-    getVehicle(intervention.vehicleId),
-    getPersonnel(authStore.user?.workshopId)
-  ])
-      .then(([client, vehicle, mechanicLeader]) => enrichInterventionData(intervention, client, vehicle, mechanicLeader, mechanics));
-};
-
-const getInterventions = () => {
+function getInterventions() {
   loading.value = true;
   const workshopId = authStore.user.workshopId;
-  console.log('workshopId', workshopId);
   workshopService.getAllInterventionsByWorkshopId(workshopId)
       .then(response => {
         const interventionData = response.data;
-
         if (interventionData.length === 0) {
           noInterventions.value = true;
         } else {
           noInterventions.value = false;
-
-          getPersonnel(workshopId).then(mechanics => {
-            const populatedInterventionsPromises = interventionData.map(intervention => getAndEnrichIntervention(intervention, mechanics));
-
-            Promise.all(populatedInterventionsPromises)
-                .then(populatedInterventions => {
-                  interventions.value = populatedInterventions;
-                });
-          });
+          interventions.value = buildInterventionFromDataResponse(interventionData);
         }
+      })
+      .catch(error => {
+        console.error('Error fetching interventions:', error);
       })
       .finally(() => {
         loading.value = false;
       });
-};
+}
 
-onMounted(() => {
-  getInterventions();
-});
+function buildInterventionFromDataResponse(interventions) {
+  return interventions.map(intervention => new Intervention(intervention));
+}
+
+async function getVehicleById(id) {
+  let response = await vehiclesService.getById(id);
+  return new Vehicle(response.data);
+}
+
+async function getProfileByUserId(userId) {
+  let response = await profilesService.getProfileByUserId(userId);
+  return new Profile(response.data);
+}
 
 const openDialog = () => {
   isDialogVisible.value = true;
@@ -114,22 +95,20 @@ const closeDialog = () => {
   isDialogVisible.value = false;
 };
 
-const submitIntervention = async (interventionData) => {
-  try {
-    await interventionsService.post(interventionData);
-    getInterventions();
-  } catch (error) {
-    console.error('Error submitting intervention:', error);
-  }
-  closeDialog();
-};
-
-const filteredInterventions = computed(() => {
-  if (selectedStatus.value === 'All') {
-    return interventions.value;
-  }
-  return interventions.value.filter((intervention) => intervention.stateName === selectedStatus.value);
-});
+function submitIntervention(interventionData) {
+  interventionsService.post(interventionData)
+      .then(() => {
+        toast.add({ severity: 'success', summary: 'Intervention scheduled', life: 3000 });
+        getInterventions();
+      })
+      .catch(error => {
+        console.error('Error submitting intervention:', error);
+        toast.add({ severity: 'error', summary: 'Error scheduling intervention', life: 3000 });
+      })
+      .finally(() => {
+        closeDialog();
+      });
+}
 
 const filterByStatus = (status) => {
   selectedStatus.value = status;
@@ -159,6 +138,7 @@ const getStatusSeverity = (stateName) => {
 const goToInterventionDetail = (id) => {
   router.push(`/interventions/${id}`);
 };
+
 </script>
 
 <template>
@@ -232,35 +212,35 @@ const goToInterventionDetail = (id) => {
         <pv-column field="client.firstName" header="Client First Name" sortable>
           <template #body="slotProps">
             <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
-              {{ slotProps.data.client.firstName }}
+              {{ slotProps.data.clientFirstName }}
             </span>
           </template>
         </pv-column>
         <pv-column field="client.lastName" header="Client Last Name" sortable>
           <template #body="slotProps">
             <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
-              {{ slotProps.data.client.lastName }}
+              {{ slotProps.data.clientLastName }}
             </span>
           </template>
         </pv-column>
         <pv-column field="vehicle.licensePlate" header="Vehicle License Plate" sortable>
           <template #body="slotProps">
             <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
-              {{ slotProps.data.vehicle.licensePlate }}
+              {{ slotProps.data.vehicleLicensePlate }}
             </span>
           </template>
         </pv-column>
         <pv-column field="vehicle.model" header="Vehicle Model" sortable>
           <template #body="slotProps">
             <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
-              {{ slotProps.data.vehicle.model }}
+              {{ slotProps.data.vehicleModel }}
             </span>
           </template>
         </pv-column>
         <pv-column field="mechanic" header="Mechanic Leader" sortable>
           <template #body="slotProps">
             <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
-              {{ slotProps.data.mechanic }}
+              {{ slotProps.data.mechanicLeader }}
             </span>
           </template>
         </pv-column>
@@ -274,14 +254,14 @@ const goToInterventionDetail = (id) => {
         <pv-column field="registrationDate" header="Registration Date" sortable>
           <template #body="slotProps">
             <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
-              {{ slotProps.data.registrationDate }}
+              {{ slotProps.data.createdAt }}
             </span>
           </template>
         </pv-column>
         <pv-column field="completionDate" header="Completion Date" sortable>
           <template #body="slotProps">
             <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
-              {{ slotProps.data.completionDate || 'N/A' }}
+              {{ slotProps.data.updatedAt || 'N/A' }}
             </span>
           </template>
         </pv-column>
@@ -289,8 +269,8 @@ const goToInterventionDetail = (id) => {
           <template #body="slotProps">
             <pv-button
                 @click="goToInterventionDetail(slotProps.data.id)"
-                :severity="getStatusSeverity(slotProps.data.stateName)"
-                :label="slotProps.data.stateName"
+                :severity="getStatusSeverity(slotProps.data.status)"
+                :label="slotProps.data.status"
                 class="cursor-pointer custom-status-button"
             />
           </template>
