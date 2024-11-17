@@ -91,7 +91,7 @@ function onSubmit() {
 }
 
 function verifyRole() {
-  isNotAvailable.value = authStore.user.roleId == Role.WORKSHOP_OWNER;
+  isNotAvailable.value = authStore.user.roleId === Role.WORKSHOP_OWNER;
 }
 </script>
 

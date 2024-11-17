@@ -57,7 +57,7 @@ function loadIntervention() {
 }
 
 function loadClient(clientId) {
-  profilesService.getById(clientId)
+  profilesService.getProfileByUserId(clientId)
       .then(response => {
         client.value = buildClientFromResponseData(response.data);
       })
