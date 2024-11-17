@@ -214,12 +214,16 @@ function onFinishIntervention(){
 }
 
 function finishIntervention(){
-  intervention.value.finish();
-  interventionService.put(intervention.value.id, intervention.value)
+  if(intervention.value.status !== 'In Progress'){
+    toast.add({severity: 'error', summary: 'Intervention not finished', detail: 'The intervention is not in progress', life: 3000});
+    return;
+  }
+  interventionService.finishIntervention(intervention.value.id)
       .then(
           () => {
-            toast.add({severity: 'success', summary: 'Success', detail: 'Intervention finished', life: 3000});
+            getIntervention();
             goToActivities();
+            toast.add({severity: 'success', summary: 'Success', detail: 'Intervention finished', life: 3000});
           },
           () => {
             toast.add({severity: 'error', summary: 'Intervention not finished', detail: 'An error occurred while finishing the intervention', life: 3000});
