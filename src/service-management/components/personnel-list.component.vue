@@ -1,7 +1,6 @@
 <script setup>
 import PersonnelItem from "./personnel-item.component.vue";
 
-// Props passed from parent to display the list of mechanics
 defineProps({
   mechanics: {
     type: Array,
@@ -9,18 +8,15 @@ defineProps({
   }
 });
 
-// Emit to notify the parent when a mechanic is selected
 const emit = defineEmits(['editMechanic']);
 
-// Function to handle the mechanic selection and emit to the parent
 const handleSelectMechanic = (mechanic) => {
-  emit('editMechanic', mechanic); // Emit the mechanic to the parent
+  emit('editMechanic', mechanic);
 };
 </script>
 
 <template>
   <div class="personnel-cards">
-    <!-- Loop through mechanics and pass each mechanic to the PersonnelItem component -->
     <personnel-item
         v-for="mechanic in mechanics"
         :key="mechanic.id"

@@ -1,78 +1,84 @@
 <script setup>
-import {ref, computed, onMounted} from 'vue';
-import {useRouter} from 'vue-router';
-import {InterventionsService} from '../services/interventions.service.js';
-import {ClientsService} from '../../cmr/services/clients.service.js';
-import {VehiclesService} from '../../cmr/services/vehicles.service.js';
-import {PersonnelService} from '../services/personnel.service.js';
-import {Client} from '../../cmr/model/client.entity.js';
-import {Vehicle} from '../../cmr/model/vehicle.entity.js';
-import {Intervention} from '../model/intervention.entity.js';
-import {InterventionState} from '../model/intervention-state.enum.js';
-import {InterventionType} from '../model/intervention-type.enum.js';
-import NewInterventionDialog from "../components/new-intervention-dialog.component.vue";
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { InterventionsService } from '../services/interventions.service.js';
+import { ProfilesService } from '../../profile-management/services/profiles.service.js';
+import { VehicleService } from '../services/vehicle.service.js';
+import { WorkshopService } from '../services/workshop.service.js';
+import { Profile } from '../../profile-management/model/profile.entity.js';
+import { Vehicle } from '../model/vehicle.entity.js';
+import { Intervention } from '../model/intervention.entity.js';
+import { InterventionState } from '../model/intervention-state.enum.js';
+import { InterventionType } from '../model/intervention-type.enum.js';
+import NewInterventionDialog from '../components/new-intervention-dialog.component.vue';
+import { useAuthStore } from "../../iam/services/auth-store.js";
 
 const router = useRouter();
 const interventionsService = new InterventionsService();
-const clientsService = new ClientsService();
-const vehiclesService = new VehiclesService();
-const personnelService = new PersonnelService();
+const profilesService = new ProfilesService();
+const vehiclesService = new VehicleService();
+const workshopService = new WorkshopService();
+const authStore = useAuthStore();
 
 const interventions = ref([]);
 const noInterventions = ref(false);
-const filters = ref({global: {value: ''}});
+const filters = ref({ global: { value: '' } });
 const selectedStatus = ref('All');
 const loading = ref(false);
 const isDialogVisible = ref(false);
 const isTableView = ref(true);
 
-const createClient = (clientData) => new Client(clientData);
+const createProfile = (profileData) => new Profile(profileData);
 const createVehicle = (vehicleData) => new Vehicle(vehicleData);
 
-const getClient = (clientId) => {
-  return clientsService.getById(clientId)
-      .then(response => createClient(response.data))
+const getProfileByVehicleId = (vehicleId) => {
+  return vehiclesService.getById(vehicleId)
+      .then(response => profilesService.getById(response.data.userId))
+      .then(response => createProfile(response.data));
 };
 
 const getVehicle = (vehicleId) => {
   return vehiclesService.getById(vehicleId)
-      .then(response => createVehicle(response.data))
+      .then(response => createVehicle(response.data));
 };
 
-const getPersonnel = (workshopId, mechanicLeaderId) => {
-  return personnelService.getAllPersonnel(workshopId)
-      .then(response => {
-        const mechanicLeader = response.data.find(m => m.id === mechanicLeaderId);
-        return mechanicLeader ? mechanicLeader.name : 'N/A';
-      })
+const getPersonnel = (workshopId) => {
+  return workshopService.getMechanicsUserIdByWorkshopId(workshopId)
+      .then(response => response.data.map(mechanic => ({
+        id: mechanic.id,
+        fullName: mechanic.fullName
+      })));
 };
 
-const enrichInterventionData = (intervention, client, vehicle, mechanicLeader) => {
+const enrichInterventionData = (intervention, client, vehicle, mechanicLeader, mechanics) => {
+  const mechanic = mechanics.find(m => m.id === intervention.mechanicLeaderId);
   return {
     ...intervention,
     client,
     vehicle,
     mechanicLeader,
-    interventionTypeName: InterventionType.getName(intervention.interventionType),
-    stateName: InterventionState.getName(intervention.state)
+    mechanic: mechanic ? mechanic.fullName : 'N/A',
+    interventionTypeName: InterventionType.getName(intervention.type),
+    stateName: InterventionState.getName(intervention.status)
   };
 };
 
-const getAndEnrichIntervention = (interventionData) => {
+const getAndEnrichIntervention = (interventionData, mechanics) => {
   const intervention = new Intervention(interventionData);
 
   return Promise.all([
-    getClient(intervention.clientId),
+    getProfileByVehicleId(intervention.vehicleId),
     getVehicle(intervention.vehicleId),
-    getPersonnel(intervention.workshopId, intervention.mechanicLeaderId)
+    getPersonnel(authStore.user?.workshopId)
   ])
-      .then(([client, vehicle, mechanicLeader]) => enrichInterventionData(intervention, client, vehicle, mechanicLeader))
+      .then(([client, vehicle, mechanicLeader]) => enrichInterventionData(intervention, client, vehicle, mechanicLeader, mechanics));
 };
 
 const getInterventions = () => {
   loading.value = true;
-
-  interventionsService.getAll()
+  const workshopId = authStore.user.workshopId;
+  console.log('workshopId', workshopId);
+  workshopService.getAllInterventionsByWorkshopId(workshopId)
       .then(response => {
         const interventionData = response.data;
 
@@ -81,12 +87,14 @@ const getInterventions = () => {
         } else {
           noInterventions.value = false;
 
-          const populatedInterventionsPromises = interventionData.map(intervention => getAndEnrichIntervention(intervention));
+          getPersonnel(workshopId).then(mechanics => {
+            const populatedInterventionsPromises = interventionData.map(intervention => getAndEnrichIntervention(intervention, mechanics));
 
-          Promise.all(populatedInterventionsPromises)
-              .then(populatedInterventions => {
-                interventions.value = populatedInterventions;
-              })
+            Promise.all(populatedInterventionsPromises)
+                .then(populatedInterventions => {
+                  interventions.value = populatedInterventions;
+                });
+          });
         }
       })
       .finally(() => {
@@ -147,7 +155,6 @@ const getStatusSeverity = (stateName) => {
       return 'secondary';
   }
 };
-
 
 const goToInterventionDetail = (id) => {
   router.push(`/interventions/${id}`);
@@ -250,17 +257,17 @@ const goToInterventionDetail = (id) => {
             </span>
           </template>
         </pv-column>
-        <pv-column field="mechanicLeader" header="Mechanic Leader" sortable>
+        <pv-column field="mechanic" header="Mechanic Leader" sortable>
           <template #body="slotProps">
             <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
-              {{ slotProps.data.mechanicLeader }}
+              {{ slotProps.data.mechanic }}
             </span>
           </template>
         </pv-column>
         <pv-column field="interventionTypeName" header="Intervention Type" sortable>
           <template #body="slotProps">
             <span @click="goToInterventionDetail(slotProps.data.id)" class="cursor-pointer">
-              {{ slotProps.data.interventionTypeName }}
+              {{ slotProps.data.type }}
             </span>
           </template>
         </pv-column>
@@ -309,7 +316,7 @@ const goToInterventionDetail = (id) => {
         </template>
         <template #content class="card-content">
           <p><strong>Vehicle:</strong> {{ intervention.vehicle.licensePlate }} - {{ intervention.vehicle.model }}</p>
-          <p><strong>Mechanic Leader:</strong> {{ intervention.mechanicLeader }}</p>
+          <p><strong>Mechanic Leader:</strong> {{ intervention.mechanic }}</p>
           <p><strong>Intervention Type:</strong> {{ intervention.interventionTypeName }}</p>
           <p><strong>Registration Date:</strong> {{ intervention.registrationDate }}</p>
           <p><strong>Completion Date:</strong> {{ intervention.completionDate || 'N/A' }}</p>

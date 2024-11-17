@@ -1,7 +1,6 @@
 <script setup>
 import { ref, inject, watch } from 'vue';
 
-//Inject shared state and methods from the parent
 const isModalOpen = inject('isModalOpen');
 const selectedMechanic = inject('selectedMechanic');
 const createMechanic = inject('createMechanic');
@@ -13,109 +12,103 @@ const formData = ref({
   lastName: '',
   dni: '',
   email: '',
-  password: '',
+  age: 0,
+  location: '',
 });
 
-//Validation error messages
 const validationErrors = ref({
   firstName: '',
   lastName: '',
   dni: '',
   email: '',
-  password: ''
+  age: '',
+  location: '',
 });
 
-//Watch the selectedMechanic to pre-fill the form if we're updating
 watch(selectedMechanic, (newMechanic) => {
   if (newMechanic) {
-    formData.value = { ...newMechanic }; //Pre-fill the form for editing
+    formData.value = { ...newMechanic };
   } else {
-    //Reset form data for new mechanic creation
     formData.value = {
       firstName: '',
       lastName: '',
       dni: '',
       email: '',
-      password: '',
+      age: 0,
+      location: '',
     };
   }
 });
 
-//Validation function for checking form inputs
 const validateForm = () => {
   let isValid = true;
-  //Reset error messages
   validationErrors.value = {
     firstName: '',
     lastName: '',
     dni: '',
     email: '',
-    password: ''
+    age: '',
+    location: '',
   };
 
-  //First Name validation
   if (!formData.value.firstName) {
     validationErrors.value.firstName = 'First Name is required';
     isValid = false;
   }
 
-  //Last Name validation
   if (!formData.value.lastName) {
     validationErrors.value.lastName = 'Last Name is required';
     isValid = false;
   }
 
-  //DNI validation (must be exactly 8 characters)
   if (!formData.value.dni || formData.value.dni.length !== 8) {
     validationErrors.value.dni = 'DNI must be exactly 8 characters';
     isValid = false;
   }
 
-  //Email validation
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailPattern.test(formData.value.email)) {
     validationErrors.value.email = 'Please enter a valid email address';
     isValid = false;
   }
 
-  //Password validation (minimum 6 characters)
-  if (!formData.value.password || formData.value.password.length < 6) {
-    validationErrors.value.password = 'Password must be at least 6 characters long';
+  if (formData.value.age <= 0) {
+    validationErrors.value.age = 'Age must be a positive number';
+    isValid = false;
+  }
+
+  if (!formData.value.location) {
+    validationErrors.value.location = 'Location is required';
     isValid = false;
   }
 
   return isValid;
 };
 
-//Handle form submission for creating or updating mechanic
 const handleSubmit = () => {
   if (validateForm()) {
     if (selectedMechanic.value) {
-      updateMechanic(formData.value); // Update mechanic
+      updateMechanic(formData.value);
     } else {
-      createMechanic(formData.value); // Create new mechanic
+      createMechanic(formData.value);
     }
   }
 };
 
-//Handle delete mechanic
 const handleDelete = () => {
-  deleteMechanic(formData.value.id); // Delete mechanic
+  deleteMechanic(formData.value.id);
 };
 </script>
 
 <template>
-  <pv-dialog v-model:visible="isModalOpen" :header="selectedMechanic ? 'Information' : 'New Mechanic Registration'"
-             modal>
+  <pv-dialog v-model:visible="isModalOpen" :header="selectedMechanic ? 'Information' : 'New Mechanic Registration'" modal>
     <form @submit.prevent="handleSubmit" class="form-content">
       <label>First Name</label>
-      <pv-inputtext v-model="formData.firstName" placeholder="First Name"
-                    :class="{ 'is-invalid': validationErrors.firstName }"/>
+      <pv-inputtext v-model="formData.firstName" placeholder="First Name" :class="{ 'is-invalid': validationErrors.firstName }"/>
       <span class="error-message">{{ validationErrors.firstName }}</span>
 
       <label>Last Name</label>
-      <pv-inputtext v-model="formData.lastName" placeholder="Last Name"
-                    :class="{ 'is-invalid': validationErrors.lastName }"/>
+      <pv-inputtext v-model="formData.lastName" placeholder="Last Name" :class="{ 'is-invalid': validationErrors.lastName }"/>
       <span class="error-message">{{ validationErrors.lastName }}</span>
 
       <label>DNI</label>
@@ -126,10 +119,13 @@ const handleDelete = () => {
       <pv-inputtext v-model="formData.email" placeholder="Email" :class="{ 'is-invalid': validationErrors.email }"/>
       <span class="error-message">{{ validationErrors.email }}</span>
 
-      <label>Password</label>
-      <pv-inputtext type="password" v-model="formData.password" placeholder="Password"
-                    :class="{ 'is-invalid': validationErrors.password }"/>
-      <span class="error-message">{{ validationErrors.password }}</span>
+      <label>Age</label>
+      <pv-inputtext v-model="formData.age" placeholder="Age" type="number" :class="{ 'is-invalid': validationErrors.age }"/>
+      <span class="error-message">{{ validationErrors.age }}</span>
+
+      <label>Location</label>
+      <pv-inputtext v-model="formData.location" placeholder="Location" :class="{ 'is-invalid': validationErrors.location }"/>
+      <span class="error-message">{{ validationErrors.location }}</span>
 
       <div class="button-group">
         <pv-button v-if="selectedMechanic" label="Update" type="submit" class="update-button"/>
@@ -144,50 +140,85 @@ const handleDelete = () => {
 .form-content {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  font-size: 1.5rem;
+  gap: 15px;
+  font-size: 1.6rem;
   width: 400px;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 @media (max-width: 768px) {
   .form-content {
-    width: 80vw;
+    width: 90vw;
   }
+}
+
+.label {
+  font-size: 1.6rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.pv-inputtext {
+  padding: 10px;
+  font-size: 1.5rem;
+  border: 2px solid #78B4FF;
+  border-radius: 5px;
+  background-color: #F4F9FF;
+  transition: border 0.3s ease;
+}
+
+.pv-inputtext:focus {
+  border-color: #006DFF;
+  outline: none;
+}
+
+.error-message {
+  color: red;
+  font-size: 1.2rem;
+  margin-top: 5px;
+}
+
+.is-invalid {
+  border-color: red;
 }
 
 .button-group {
   display: flex;
   justify-content: space-between;
-  gap: 7px;
+  gap: 10px;
   margin-top: 20px;
 }
 
-.create-button, .update-button {
-  background-color: #333;
-  color: white;
-  width: 100%;
-  border-radius: 5px;
-  font-weight: bold;
+.create-button, .update-button, .delete-button {
   font-size: 1.5rem;
+  font-weight: bold;
+  padding: 12px;
+  width: 100%;
+  border-radius: 8px;
+  transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+.create-button, .update-button {
+  background-color: #006DFF;
+  color: white;
+}
+
+.create-button:hover, .update-button:hover {
+  background-color: #004B86;
+  transform: translateY(-3px);
 }
 
 .delete-button {
-  background-color: red;
+  background-color: #e50d0d;
   color: white;
-  width: 100%;
-  border-radius: 5px;
-  font-weight: bold;
-  font-size: 1.5rem;
 }
 
-/* Styling for error messages */
-.error-message {
-  color: red;
-  font-size: 1rem;
-}
-
-/* Styling for invalid input fields */
-.is-invalid {
-  border-color: red;
+.delete-button:hover {
+  background-color: #e50d0d;
+  transform: translateY(-3px);
 }
 </style>

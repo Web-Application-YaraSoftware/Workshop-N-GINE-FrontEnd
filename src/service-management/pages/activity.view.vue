@@ -1,7 +1,7 @@
 <script setup>
 import {computed, markRaw, onMounted, ref, watchEffect} from "vue";
 import {useRoute, useRouter} from "vue-router";
-import {useWorkshopStore} from "../../shared/services/workshop-store.js";
+import {useWorkshopStore} from "../services/workshop-store.js";
 import ActivityInformation from "../components/activity-information.component.vue";
 import ActivityDiagnosticPreparation from "../components/activity-diagnostic-preparation.component.vue";
 import ActivityExecution from "../components/activity-execution.component.vue";
@@ -11,9 +11,14 @@ import {InterventionsService} from "../services/interventions.service.js";
 import {TasksService} from "../services/tasks.service.js";
 import { useConfirm } from "primevue/useconfirm";
 import {useToast} from "primevue/usetoast";
+import {useAuthStore} from "../../iam/services/auth-store.js";
+import {ProfilesService} from "../../profile-management/services/profiles.service.js";
 
 const router = useRouter();
 const route = useRoute();
+const profile = ref(null);
+const profileService = new ProfilesService();
+const authenticationStore = useAuthStore();
 const workshopStore = useWorkshopStore();
 const hasTasks = ref(true);
 const steps = ref([
@@ -79,15 +84,22 @@ function validateMechanicType(){
 }
 
 function areThereTasks(){
-  tasksService.getAllByMechanicIdAndInterventionId(workshopStore.user.id, router.currentRoute.value.params.id)
-      .then(
-          (response) => {
-            hasTasks.value = response.data.length > 0;
-          },
-          () => {
-            toast.add({severity: 'error', summary: 'Tasks not loaded', detail: 'An error occurred while loading tasks data', life: 3000});
-          }
-      )
+  const interventionId = Number(router.currentRoute.value.params.id);
+  profileService.getProfileByUserId(authenticationStore.user.id)
+      .then( response => {
+        profile.value = response.data;
+
+        interventionService.getAllTasksByMechanicIdAndInterventionId(profile.value.id, interventionId)
+            .then(
+                (response) => {
+                  hasTasks.value = response.data.length > 0;
+                },
+                () => {
+                  toast.add({severity: 'error', summary: 'Tasks not loaded', detail: 'An error occurred while loading tasks data', life: 3000});
+                }
+            )
+      });
+
 }
 
 function verifyRoute(){

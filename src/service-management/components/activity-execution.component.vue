@@ -1,21 +1,19 @@
 <script setup>
 import ExecutionRequests from "./execution-requests.component.vue";
 import ExecutionTracking from "./execution-tracking.component.vue";
-import {useWorkshopStore} from "../../shared/services/workshop-store.js";
 import {Intervention} from "../model/intervention.entity.js";
 import {Task} from "../model/task.entity.js";
-import {ProductStock} from "../model/product-stock.entity.js";
-import {TaskProductUsage} from "../model/task-product-usage.entity.js";
-import {ProductRequest} from "../model/product-request.entity.js";
+import {ProductStock} from "../../Inventory/model/product-stock.entity.js";
+import {ProductRequest} from "../../Inventory/model/product-request.entity.js";
 import {Checkpoint} from "../model/checkpoint.entity.js";
-import {TasksService} from "../services/tasks.service.js";
-import {ProductStockService} from "../services/product-stock.service.js";
-import {TaskProductUsageService} from "../services/task-product-usage.service.js";
-import {ProductRequestService} from "../services/product-request.service.js";
-import {CheckpointService} from "../services/checkpoint.service.js";
+import {ProductStockService} from "../../Inventory/services/product-stock.service.js";
+import {ProductRequestService} from "../../Inventory/services/product-request.service.js";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import {computed, onMounted, ref, watch, watchEffect} from "vue";
+import {useAuthStore} from "../../iam/services/auth-store.js";
+import {InterventionsService} from "../services/interventions.service.js";
+import {ProfilesService} from "../../profile-management/services/profiles.service.js";
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -27,17 +25,16 @@ const props = defineProps({
   },
   parentAction: Boolean
 });
-const tasksService = new TasksService();
+const interventionService = new InterventionsService();
 const productStockService = new ProductStockService();
-const taskProductUsageService = new TaskProductUsageService();
 const productRequestService = new ProductRequestService();
-const checkpointService = new CheckpointService();
-const workshopStore = useWorkshopStore();
+const profileService = new ProfilesService();
+const authenticationStore = useAuthStore();
 const productsStock = ref([]);
 const productsRequests = ref([]);
-const taskProductUsages = ref([]);
 const checkpoints = ref([]);
 const tasks = ref([]);
+const profile = ref(null);
 const totalTasks = computed(() => tasks.value.length);
 const selectedTask = ref();
 const selectedTaskId = computed(() => selectedTask.value? selectedTask.value?.id: 0);
@@ -56,13 +53,13 @@ watch(()=>props.parentAction, () => {
 
 watchEffect(() => {
   if (selectedTask.value !== 0 && selectedTask.value) {
-    getTaskProductUsages();
     getProductRequests();
     getCheckpoint();
   }
 });
 
 onMounted(() => {
+  getProfile();
   getTasks();
   selectedOption.value = options.value[0];
   getProductsStock();
@@ -72,12 +69,30 @@ function handleTaskChange(task) {
   selectedTask.value = task;
 }
 
+function handleTabChange(newTaskId) {
+  const task = tasks.value.find(task => task.id === newTaskId);
+  if (task) {
+    handleTaskChange(task);
+  }
+}
+
+
 function handleOptionChange(option) {
   selectedOption.value = option;
 }
 
-function getTasks() {
-  tasksService.getAllByMechanicIdAndInterventionId(workshopStore.user.id, props.intervention?.id)
+async function getProfile() {
+  try {
+    const response = await profileService.getProfileByUserId(authenticationStore.user.id);
+    profile.value = response.data;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function getTasks() {
+  await getProfile();
+  interventionService.getAllTasksByMechanicIdAndInterventionId(profile.value.id, props.intervention?.id)
       .then(
           response => {
             tasks.value = buildTasksFromResponseData(response.data);
@@ -94,7 +109,7 @@ function buildTasksFromResponseData(data){
 }
 
 function getProductsStock(){
-  productStockService.getAllByWorkshopId(workshopStore.workshop?.id)
+  productStockService.getAllByWorkshopId(authenticationStore.user.workshopId)
       .then(
           response => {
             productsStock.value = buildProductsStockFromResponseData(response.data);
@@ -107,22 +122,6 @@ function getProductsStock(){
 
 function buildProductsStockFromResponseData(data){
   return data.map(productStock => new ProductStock(productStock))
-}
-
-function getTaskProductUsages(){
-  taskProductUsageService.getAllByTaskId(selectedTask.value.id)
-      .then(
-          response => {
-            taskProductUsages.value = buildTaskProductUsagesFromResponseData(response.data);
-          },
-          error => {
-            console.error(error);
-          }
-      );
-}
-
-function buildTaskProductUsagesFromResponseData(data){
-  return data.map(taskProductUsage => new TaskProductUsage(taskProductUsage))
 }
 
 function getProductRequests(){
@@ -142,7 +141,7 @@ function buildProductsRequestsFromResponseData(data){
 }
 
 function getCheckpoint(){
-  checkpointService.getAllByTaskId(selectedTask.value.id)
+  interventionService.getAllCheckpointsByInterventionIdAndTaskId(selectedTask.value.id, props.intervention?.id)
       .then(
           response => {
             checkpoints.value = buildCheckpointsFromResponseData(response.data);
@@ -157,52 +156,14 @@ function buildCheckpointsFromResponseData(data){
   return data.map(checkpoint => new Checkpoint(checkpoint))
 }
 
-function onRequestAddTaskProductUsage(taskProductUsage){
-  const newTaskProductUsage = new TaskProductUsage();
-  newTaskProductUsage.taskId = selectedTask.value.id;
-  newTaskProductUsage.productStockId = taskProductUsage.productType;
-  newTaskProductUsage.quantityUsed = Number(taskProductUsage.quantity);
-  confirm.require({
-    message: `Are you sure you want to add the product usage?`,
-    header: "Confirmation",
-    icon: "pi pi-exclamation-triangle",
-    rejectProps: {
-      label: 'Cancel',
-      icon: 'pi pi-times',
-      outlined: true,
-      size: 'small'
-    },
-    acceptProps: {
-      label: 'Save',
-      icon: 'pi pi-check',
-      size: 'small'
-    },
-    accept: () => {
-      addTaskProductUsage(newTaskProductUsage);
-    }
-  });
-}
-
-function addTaskProductUsage(taskProductUsage){
-  taskProductUsageService.post(taskProductUsage)
-      .then(
-          () => {
-            toast.add({severity: 'success', summary: 'Success', detail: 'Task product usage added successfully', life: 4000});
-            getTaskProductUsages();
-          },
-          () => {
-            toast.add({severity: 'error', summary: 'Error', detail: 'An error occurred while adding the task product usage', life: 4000});
-          }
-      );
-}
 
 function onRequestAddProductRequest(productRequest){
   const newProductRequest = new ProductRequest();
-  newProductRequest.workshopId = workshopStore.workshop?.id;
+  newProductRequest.workshopId = authenticationStore.user.workshopId;
   newProductRequest.taskId = selectedTask.value.id;
-  newProductRequest.name = productRequest.productType;
+  newProductRequest.productId = productRequest.productType;
   newProductRequest.requestedQuantity = Number(productRequest.quantity);
-  newProductRequest.observation = productRequest.description;
+
   confirm.require({
     message: `Are you sure you want to add the product request?`,
     header: "Confirmation",
@@ -237,112 +198,6 @@ function addProductRequest(productRequest){
       );
 }
 
-function onRequestDeleteTaskProductUsage(taskProductUsage){
-  confirm.require({
-    message: `Are you sure you want to delete the product usage?`,
-    header: "Confirmation",
-    icon: "pi pi-exclamation-triangle",
-    rejectProps: {
-      label: 'Cancel',
-      icon: 'pi pi-times',
-      outlined: true,
-      size: 'small'
-    },
-    acceptProps: {
-      label: 'Delete',
-      icon: 'pi pi-trash',
-      class: 'p-button-danger',
-      size: 'small'
-    },
-    accept: () => {
-      deleteTaskProductUsage(taskProductUsage);
-    }
-  });
-}
-
-function deleteTaskProductUsage(taskProductUsage){
-  taskProductUsageService.delete(taskProductUsage.id)
-      .then(
-          () => {
-            toast.add({severity: 'success', summary: 'Success', detail: 'Task product usage deleted successfully', life: 4000});
-            getTaskProductUsages();
-          },
-          () => {
-            toast.add({severity: 'error', summary: 'Error', detail: 'An error occurred while deleting the task product usage', life: 4000});
-          }
-      );
-}
-
-function onRequestDeleteProductRequest(productRequest){
-  confirm.require({
-    message: `Are you sure you want to delete the product request?`,
-    header: "Confirmation",
-    icon: "pi pi-exclamation-triangle",
-    rejectProps: {
-      label: 'Cancel',
-      icon: 'pi pi-times',
-      outlined: true,
-      size: 'small'
-    },
-    acceptProps: {
-      label: 'Delete',
-      icon: 'pi pi-trash',
-      class: 'p-button-danger',
-      size: 'small'
-    },
-    accept: () => {
-      deleteProductRequest(productRequest);
-    }
-  });
-}
-
-function deleteProductRequest(productRequest){
-  productRequestService.delete(productRequest.id)
-      .then(
-          () => {
-            toast.add({severity: 'success', summary: 'Success', detail: 'Product request deleted successfully', life: 4000});
-            getProductRequests();
-          },
-          () => {
-            toast.add({severity: 'error', summary: 'Error', detail: 'An error occurred while deleting the product request', life: 4000});
-          }
-      );
-}
-
-function onRequestUpdateTaskProductUsage(taskProductUsage){
-  confirm.require({
-    message: `Are you sure you want to update the product usage?`,
-    header: "Confirmation",
-    icon: "pi pi-exclamation-triangle",
-    rejectProps: {
-      label: 'Cancel',
-      icon: 'pi pi-times',
-      outlined: true,
-      size: 'small'
-    },
-    acceptProps: {
-      label: 'Save',
-      icon: 'pi pi-check',
-      size: 'small'
-    },
-    accept: () => {
-      updateTaskProductUsage(taskProductUsage);
-    }
-  });
-}
-
-function updateTaskProductUsage(taskProductUsage){
-  taskProductUsageService.put(taskProductUsage.id, taskProductUsage)
-      .then(
-          () => {
-            toast.add({severity: 'success', summary: 'Success', detail: 'Task product usage updated successfully', life: 4000});
-            getTaskProductUsages();
-          },
-          () => {
-            toast.add({severity: 'error', summary: 'Error', detail: 'An error occurred while updating the task product usage', life: 4000});
-          }
-      );
-}
 
 function onRequestUpdateProductRequest(productRequest){
   confirm.require({
@@ -380,6 +235,9 @@ function updateProductRequest(productRequest){
 }
 
 function onRequestAddCheckpoint(checkpoint){
+  const newCheckpoint ={
+    "name": checkpoint
+  }
   confirm.require({
     message: `Are you sure you want to add the checkpoint?`,
     header: "Confirmation",
@@ -396,16 +254,13 @@ function onRequestAddCheckpoint(checkpoint){
       size: 'small'
     },
     accept: () => {
-      addCheckpoint(checkpoint);
+      addCheckpoint(newCheckpoint);
     }
   });
 }
 
 function addCheckpoint(checkpoint){
-  const newCheckpoint = new Checkpoint();
-  newCheckpoint.name = checkpoint;
-  newCheckpoint.taskId = selectedTask.value.id;
-  checkpointService.post(newCheckpoint)
+  interventionService.postCheckpoint(checkpoint, selectedTask.value.id, props.intervention?.id)
       .then(
           () => {
             toast.add({severity: 'success', summary: 'Success', detail: 'Checkpoint added successfully', life: 4000});
@@ -418,6 +273,7 @@ function addCheckpoint(checkpoint){
 }
 
 function onRequestDeleteCheckpoint(checkpoint){
+  console.log(checkpoint);
   confirm.require({
     message: `Are you sure you want to delete the checkpoint?`,
     header: "Confirmation",
@@ -441,7 +297,7 @@ function onRequestDeleteCheckpoint(checkpoint){
 }
 
 function deleteCheckpoint(checkpoint){
-  checkpointService.delete(checkpoint.id)
+  interventionService.deleteCheckpoint(checkpoint.id, selectedTask.value.id, props.intervention?.id)
       .then(
           () => {
             toast.add({severity: 'success', summary: 'Success', detail: 'Checkpoint deleted successfully', life: 4000});
@@ -476,7 +332,7 @@ function onRequestUpdateCheckpoint(checkpoint){
 }
 
 function updateCheckpoint(checkpoint){
-  checkpointService.put(checkpoint.id, checkpoint)
+  interventionService.putCheckpoint(checkpoint.id, selectedTask.value.id, props.intervention?.id, checkpoint)
       .then(
           () => {
             toast.add({severity: 'success', summary: 'Success', detail: 'Checkpoint updated successfully', life: 4000});
@@ -513,7 +369,7 @@ function onFinishTask(){
 function finishTask(){
   const finishedTask = new Task(selectedTask.value);
   finishedTask.finishTask();
-  tasksService.put(finishedTask.id, finishedTask)
+  interventionService.putTask(finishedTask.id, finishedTask, props.intervention?.id)
       .then(
           () => {
             toast.add({severity: 'success', summary: 'Success', detail: 'Task finished successfully', life: 4000});
@@ -536,7 +392,7 @@ function goNextTask(){
 
 <template>
   <div class="content" v-if="totalTasks>0">
-    <pv-tabs style="width: 100%" v-model:value="selectedTaskId" scrollable>
+    <pv-tabs style="width: 100%" :value="selectedTaskId" @update:value="handleTabChange" scrollable>
       <pv-tablist>
         <pv-tab
             v-for="(task, index) in tasks"
@@ -562,13 +418,8 @@ function goNextTask(){
     <execution-requests
         v-if="selectedOption === options[0]"
         :products-stock="productsStock"
-        :task-product-usages="taskProductUsages"
         :products-requests="productsRequests"
-        @add:taskProductUsage="onRequestAddTaskProductUsage($event)"
         @add:productRequest="onRequestAddProductRequest($event)"
-        @delete:taskProductUsage="onRequestDeleteTaskProductUsage($event)"
-        @delete:productRequest="onRequestDeleteProductRequest($event)"
-        @update:taskProductUsage="onRequestUpdateTaskProductUsage($event)"
         @update:productRequest="onRequestUpdateProductRequest($event)"
     />
     <execution-tracking

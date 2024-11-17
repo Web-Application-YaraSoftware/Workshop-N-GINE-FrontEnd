@@ -1,51 +1,55 @@
 <script setup>
 import {ref, onMounted} from 'vue';
 import {useRoute} from 'vue-router';
-import {InterventionState} from "../model/intervention-state.enum.js";
-import {InterventionsService} from "../../cmr/services/intervention.service.js";
-import {PersonnelService} from "../services/personnel.service.js";
-import {VehicleService} from "../../cmr/services/vehicle.service.js";
-import {TasksService} from "../services/tasks.service.js";
-import {ClientsService} from "../../cmr/services/clients.service.js";
+import {InterventionsService} from "../services/interventions.service.js";
+import {VehicleService} from "../services/vehicle.service.js";
 import {Intervention} from "../model/intervention.entity.js";
 import {useToast} from 'primevue/usetoast';
-import {Mechanic} from '../model/mechanic.entity.js';
-import {Vehicle} from "../../cmr/model/vehicle.entity.js";
-import {Client} from "../../cmr/model/client.entity.js";
+import {Vehicle} from "../model/vehicle.entity.js";
 import {Task} from '../model/task.entity.js';
 import GeneralInformation from "../components/general-information.component.vue";
 import InterventionSummary from "../components/intervention-summary.component.vue";
-import {useWorkshopStore} from "../../shared/services/workshop-store.js";
+import {useAuthStore} from "../../iam/services/auth-store.js";
+import {Profile} from "../../profile-management/model/profile.entity.js";
+import {ProfilesService} from "../../profile-management/services/profiles.service.js";
+import {WorkshopService} from "../services/workshop.service.js";
 
 const route = useRoute();
 const toast = useToast();
 
 const intervention = ref(new Intervention());
-const client = ref();
+const client = ref(new Profile());
 const mechanics = ref([]);
 const vehicles = ref([]);
 const tasks = ref([]);
 const currentView = ref('generalInformation');
 
 const interventionsService = new InterventionsService();
-const personnelService = new PersonnelService();
-const clientService = new ClientsService();
+const workshopService = new WorkshopService();
 const vehicleService = new VehicleService();
-const taskService = new TasksService();
+const profilesService = new ProfilesService();
 
-const workshopStore = useWorkshopStore();
+const workshopId = useAuthStore().user.workshopId;
 
 const isDialogVisible = ref(false);
 const interventionToUpdate = ref(null);
 
+
 function loadIntervention() {
   const interventionId = route.params.id || '';
+  const clientId = ref(0);
   interventionsService.getById(interventionId)
       .then(response => {
         intervention.value = new Intervention(response.data);
-        loadVehicles(intervention.value.clientId);
-        loadClient(intervention.value.clientId);
-        showGeneralInformation();
+        vehicleService.getById(intervention.value.vehicleId)
+            .then(response => {
+              clientId.value = response.data.userId;
+              loadClient(clientId.value);
+              loadVehicles(clientId.value);
+            })
+            .catch(err => {
+              toast.add({severity: 'error', summary: 'Error loading client and vehicles', detail: err.message});
+            });
       })
       .catch(err => {
         toast.add({severity: 'error', summary: 'Error loading intervention', detail: err.message});
@@ -53,33 +57,56 @@ function loadIntervention() {
 }
 
 function loadClient(clientId) {
-  clientService.getById(clientId)
-      .then(
-          (response) => {
-            client.value = buildClientFromResponseData(response.data);
-          },
-          (error) => {
-            console.error(error);
-          }
-      );
-}
-
-function buildClientFromResponseData(data) {
-  return new Client(data);
-}
-
-function loadPersonnel() {
-  personnelService.getAllPersonnel(workshopStore.workshop?.id)
+  profilesService.getById(clientId)
       .then(response => {
-        mechanics.value = response.data.map(mechanic => new Mechanic(mechanic));
+        client.value = buildClientFromResponseData(response.data);
       })
       .catch(err => {
-        toast.add({severity: 'error', summary: 'Error loading personnel', detail: err.message});
+        toast.add({severity: 'error', summary: 'Error loading client', detail: err.message});
       });
 }
 
+function buildClientFromResponseData(data) {
+  return new Profile(data);
+}
+
+function loadPersonnel() {
+  fetchPersonnelUserId()
+      .then(userIds => {
+        if (!Array.isArray(userIds)) {
+          throw new Error('Invalid response format');
+        }
+        const profilePromises = userIds.map(userId => profilesService.getProfileByUserId(userId));
+        return Promise.all(profilePromises);
+      })
+      .then(profiles => {
+        mechanics.value = profiles.map(profile => mechanicFromResponseData(profile.data));
+      })
+      .catch(error => {
+        console.error('Error fetching mechanics:', error);
+      });
+}
+
+function fetchPersonnelUserId() {
+  return workshopService.getMechanicsUserIdByWorkshopId(workshopId)
+      .then(response => {
+        if (typeof response.data !== 'object' || response.data === null) {
+          throw new Error('Invalid response format');
+        }
+        return response.data;
+      })
+      .catch(error => {
+        console.error('Error fetching mechanics user IDs:', error);
+        return [];
+      });
+}
+
+function mechanicFromResponseData(data) {
+  return new Profile(data);
+}
+
 function loadVehicles(clientId) {
-  vehicleService.getByClientId(clientId)
+  vehicleService.getByUserId(clientId)
       .then(response => {
         vehicles.value = response.data.map(vehicle => new Vehicle(vehicle));
       })
@@ -90,7 +117,7 @@ function loadVehicles(clientId) {
 
 function loadTasks() {
   const interventionId = route.params.id || '';
-  taskService.getAllByInterventionId(interventionId)
+  interventionsService.getAllTasksByInterventionId(interventionId)
       .then(response => {
         tasks.value = response.data.map(t => new Task(t));
       })
@@ -114,8 +141,8 @@ function updateIntervention(updatedIntervention) {
 
 function confirmUpdate() {
   if (!interventionToUpdate.value) return;
-
-  interventionsService.putIntervention(interventionToUpdate.value.id, interventionToUpdate.value)
+  console.log('Updating intervention:', interventionToUpdate.value);
+  interventionsService.put(intervention.value.id, interventionToUpdate.value)
       .then(() => {
         toast.add({severity: 'success', summary: 'Success', detail: 'Intervention updated', life: 4000});
         isDialogVisible.value = false;
@@ -140,7 +167,7 @@ onMounted(() => {
         </template>
         <template #end>
           <pv-button class="p-button-secondary">
-            {{ InterventionState.getName(intervention.state) }}
+            {{ intervention.status}}
           </pv-button>
         </template>
       </pv-toolbar>
@@ -157,7 +184,6 @@ onMounted(() => {
               :mechanics="mechanics"
               @update:intervention="updateIntervention"
           />
-
           <intervention-summary
               v-if="currentView === 'interventionSummary'"
               :tasks="tasks"
@@ -180,6 +206,8 @@ onMounted(() => {
 <style scoped>
 .intervention-section {
   padding: 20px;
+  font-family: 'Arial', sans-serif;
+  color: #333;
 }
 
 .intervention-header {
@@ -187,25 +215,43 @@ onMounted(() => {
   flex-direction: column;
   align-items: flex-start;
   padding: 20px;
-  background-color: #f0f4f8;
-  border-bottom: 2px solid #1e90ff;
+  background-color: #f7faff;
+  border-bottom: 3px solid #007bff;
+  border-radius: 8px 8px 0 0;
+}
+
+.intervention-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #0056b3;
 }
 
 .toolbar {
   display: flex;
   justify-content: space-between;
   width: 100%;
+  margin-top: 10px;
 }
 
 .p-button {
   margin-right: 10px;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.p-button-secondary {
+  background-color: #e9ecef;
+  color: #495057;
+  border: none;
+  font-weight: bold;
 }
 
 .intervention-details {
   padding: 20px;
-  background-color: #e7f0fa;
+  background-color: #f0f4f8;
   border-radius: 10px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   margin-top: 20px;
 }
 
@@ -215,5 +261,42 @@ onMounted(() => {
 
 .information-container {
   margin-top: 20px;
+  background-color: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.pv-dialog {
+  text-align: center;
+}
+
+.pv-dialog p {
+  font-size: 1rem;
+  color: #555;
+}
+
+.pv-dialog .p-button-text {
+  font-size: 0.9rem;
+}
+
+.pv-dialog .p-button:first-of-type {
+  margin-right: 10px;
+}
+
+@media (max-width: 768px) {
+  .intervention-header {
+    align-items: center;
+    text-align: center;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .p-button {
+    margin: 5px 0;
+  }
 }
 </style>

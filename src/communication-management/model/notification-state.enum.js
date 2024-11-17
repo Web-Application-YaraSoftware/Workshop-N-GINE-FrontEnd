@@ -1,4 +1,4 @@
 export const NotificationState = Object.freeze({
-    READ: 0,
-    UNREAD: 1,
+    READ: 1,
+    UNREAD: 2,
 });

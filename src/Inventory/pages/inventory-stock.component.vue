@@ -4,7 +4,6 @@ import {onMounted, ref} from "vue";
 import {FilterMatchMode} from '@primevue/core/api';
 import {useToast} from 'primevue/usetoast';
 import {ProductStock} from "../model/product-stock.entity.js";
-import {ProductTypeService} from "../services/product-type.service.js";
 import ModelMessageDialog from "../../shared/components/model-message-dialog.component.vue";
 import EditProductStockDialog from "../components/edit-product-stock-dialog.component.vue";
 
@@ -18,18 +17,11 @@ const filters = ref({
 });
 
 const inventoryService = new ProductStockService();
-const productTypeService = new ProductTypeService()
 
 const deleteDialogVisible = ref(false);
 const editDialogVisible = ref(false);
 let modifieditem = ref();
 
-function getProductType() {
-  return productTypeService.getAll()
-      .then(response => {
-        types.value = response.data;
-      });
-}
 
 function getItems() {
   inventoryService.getAllByWorkshopId(1)
@@ -42,9 +34,6 @@ function getItems() {
 function buildItemListFromResponseData(items) {
   return items.map(item => {
     const auxItem = new ProductStock(item);
-    const matchingType = types.value.find(type => type.id === auxItem.id);
-    auxItem.productType = matchingType;
-
     return auxItem;
   });
 }
@@ -73,7 +62,6 @@ function showEditDialog(item) {
 
 
 onMounted(() => {
-  getProductType();
   getItems();
 });
 
@@ -96,9 +84,9 @@ onMounted(() => {
           currentPageReportTemplate="Showing {first} to {last} of {totalRecords} items"
       >
         <pv-column field="name" header="Name" sortable style="width: fit-content"></pv-column>
-        <pv-column field="productType.name" header="Type" sortable style="width: fit-content"></pv-column>
-        <pv-column field="amount" header="Quantity" sortable style="width: fit-content"></pv-column>
-        <pv-column field="limit" header="Limit" sortable style="width: fit-content"></pv-column>
+        <pv-column field="stockQuantity" header="Quantity" sortable style="width: fit-content"></pv-column>
+        <pv-column field="lowStockThreshold" header="Limit" sortable style="width: fit-content"></pv-column>
+        <pv-column field="description" header="Description" sortable style="width: fit-content"></pv-column>
         <pv-column :exportable="false" style="width: min-content">
           <template #body="slotProps">
             <pv-button icon="pi pi-trash" outlined rounded severity="danger" @click="showDeleteDialog(slotProps.data)"/>

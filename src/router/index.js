@@ -17,12 +17,12 @@ const router = createRouter({
                 {
                     path: 'clients',
                     name: 'clients',
-                    component: () => import('../cmr/pages/client-list.component.vue')
+                    component: () => import('../service-management/pages/client-list.component.vue')
                 },
                 {
                     path: 'clients/:id',
                     name: 'client-details',
-                    component: () => import('../cmr/pages/client-detail.component.vue')
+                    component: () => import('../service-management/pages/client-detail.component.vue')
                 },
                 {
                     path: 'interventions',
@@ -38,17 +38,17 @@ const router = createRouter({
                     path: 'inventory',
                     name: 'inventory',
                     redirect: {name: 'stock'},
-                    component: () => import('../service-management/components/inventory-header.component.vue'),
+                    component: () => import('../Inventory/components/inventory-header.component.vue'),
                     children: [
                         {
                             path: 'stock',
                             name: 'stock',
-                            component: () => import('../service-management/pages/inventory-stock.component.vue')
+                            component: () => import('../Inventory/pages/inventory-stock.component.vue')
                         },
                         {
                             path: 'requests',
                             name: 'requests',
-                            component: () => import('../service-management/pages/inventory-requests.component.vue')
+                            component: () => import('../Inventory/pages/inventory-requests.component.vue')
                         }
                     ]
                 },
@@ -97,12 +97,12 @@ const router = createRouter({
                 {
                     path: 'vehicles/:carOwnerId',
                     name: 'vehicles',
-                    component: () => import('../cmr/pages/vehicle-list.component.vue')
+                    component: () => import('../service-management/pages/vehicle-list.component.vue')
                 },
                 {
                     path: 'vehicle/:carId',
                     name: 'vehicle-details',
-                    component: () => import('../cmr/pages/vehicle-detail.component.vue')
+                    component: () => import('../service-management/pages/vehicle-detail.component.vue')
                 },
             ]
         },
@@ -124,13 +124,20 @@ const router = createRouter({
     ]
 });
 
-/*router.beforeEach((to, from, next) => {
+router.beforeEach((to, from, next) => {
     const authStore = useAuthStore();
-    if (to.name !== 'login' && to.name !== 'register' && !authStore.isAuthenticated) {
+    authStore.refresh();
+    if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {
+        authStore.refreshWorkshop();
+        next({name: 'home'});
+    }
+    else if (to.name !== 'login' && to.name !== 'register' && !authStore.isAuthenticated) {
+        authStore.refreshWorkshop();
         next({name: 'login'});
-    } else {
+    }
+    else {
         next();
     }
-});*/
+});
 
 export default router;

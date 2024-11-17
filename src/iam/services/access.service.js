@@ -1,14 +1,13 @@
 import http from "../../shared/services/http-common.js";
 
 export class AccessService {
-    resourceEndpoint = '/users';
+    resourceEndpoint = '/authentication/';
 
-    getAccessByCredentials({email, password}) {
-        return http.get(this.resourceEndpoint, {
-            params: {
-                email: email,
-                password: password
-            }
-        });
+    signIn(data) {
+        return http.post(`${this.resourceEndpoint}sign-in`, data);
+    }
+
+    signUp(data) {
+        return http.post(`${this.resourceEndpoint}sign-up`, data);
     }
 }

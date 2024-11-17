@@ -5,9 +5,10 @@ import {Role} from "../../iam/model/role.enum.js";
 export class Mechanic extends User{
     constructor({
                     id = 0,
-                    workshop_id = 0,
-                    first_name = '',
-                    last_name = '',
+                    workshopId = 0,
+                    userId = 0,
+                    firstName = '',
+                    lastName = '',
                     dni = '',
                     email = '',
                     password = '',
@@ -19,9 +20,10 @@ export class Mechanic extends User{
     } = {}) {
         super({
             id: id,
-            workshop_id: workshop_id,
-            first_name: first_name,
-            last_name: last_name,
+            workshop_id: workshopId,
+            user_id: userId,
+            first_name: firstName,
+            last_name: lastName,
             dni: dni,
             email: email,
             password: password,

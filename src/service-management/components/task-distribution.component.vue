@@ -20,7 +20,7 @@ const props = defineProps({
 const emit = defineEmits(['add:task', 'update:task', 'delete:task']);
 const tasksWithMechanicName = computed(() => {
   return props.tasks.map(task => {
-    const mechanic = props.mechanics.find(mechanic => mechanic.id === task.assistantId);
+    const mechanic = props.mechanics.find(mechanic => mechanic.id === task.mechanicAssignedId);
     return {
       ...task,
       mechanicName: mechanic ? mechanic.fullName : 'Unknown'

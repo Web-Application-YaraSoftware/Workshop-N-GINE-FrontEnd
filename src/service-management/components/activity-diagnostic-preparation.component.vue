@@ -3,7 +3,7 @@ import TaskDistribution from "./task-distribution.component.vue";
 import DiagnosticIntervention from "./diagnostic-intervention.component.vue";
 import {PersonnelService} from "../services/personnel.service.js";
 import {TasksService} from "../services/tasks.service.js";
-import {useWorkshopStore} from "../../shared/services/workshop-store.js";
+import {useWorkshopStore} from "../services/workshop-store.js";
 import {Mechanic} from "../model/mechanic.entity.js";
 import {onMounted, ref, watch} from "vue";
 import {Task} from "../model/task.entity.js";
@@ -11,6 +11,8 @@ import {Intervention} from "../model/intervention.entity.js";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import {InterventionsService} from "../services/interventions.service.js";
+import {useAuthStore} from "../../iam/services/auth-store.js";
+import {ProfilesService} from "../../profile-management/services/profiles.service.js";
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -23,8 +25,10 @@ const props = defineProps({
 });
 const emit = defineEmits(['confirm:updatedIntervention']);
 const personnelService = new PersonnelService();
+const profileService = new ProfilesService();
 const tasksService = new TasksService();
 const interventionService = new InterventionsService();
+const authenticationStore = useAuthStore();
 const workshopStore = useWorkshopStore();
 const mechanics = ref([]);
 const tasks = ref([]);
@@ -41,10 +45,16 @@ onMounted(() => {
 });
 
 function getMechanics() {
-  personnelService.getAllPersonnel(workshopStore.workshop?.id)
+  personnelService.getAllPersonnel(authenticationStore.user.workshopId)
       .then(
           response => {
-            mechanics.value = buildMechanicFromResponseData(response.data);
+            buildMechanicFromResponseData(response.data)
+                .then(mechanicsData => {
+                  mechanics.value = mechanicsData;
+                })
+                .catch(error => {
+                  console.error(error);
+                });
           },
           error => {
             console.error(error);
@@ -52,12 +62,25 @@ function getMechanics() {
       );
 }
 
-function buildMechanicFromResponseData(data){
-  return data.map(mechanic => new Mechanic(mechanic))
+function buildMechanicFromResponseData(userIds) {
+  const mechanicPromises = userIds.map(userId =>
+      profileService.getProfileByUserId(userId)
+          .then(response => new Mechanic(response.data))
+  );
+
+  return Promise.all(mechanicPromises)
+      .then(mechanics => {
+        return mechanics;
+      })
+      .catch(error => {
+        console.error(error);
+        return [];
+      });
 }
 
+
 function getTasks() {
-  tasksService.getAllByInterventionId(props.intervention?.id)
+  interventionService.getAllTasksByInterventionId(props.intervention?.id)
       .then(
           response => {
             tasks.value = buildTasksFromResponseData(response.data);
@@ -73,10 +96,10 @@ function buildTasksFromResponseData(data){
 }
 
 function onRequestAddTask(task){
-  const newTask = new Task();
-  newTask.description = task.name;
-  newTask.assistantId = task.mechanic;
-  newTask.interventionId = props.intervention?.id;
+  const requestBody = {
+    mechanicAssignedId: task.mechanic,
+    description: task.name
+  }
   confirm.require({
     message: "Are you sure you want to add this task?",
     header: "Confirmation",
@@ -93,13 +116,13 @@ function onRequestAddTask(task){
       size: 'small'
     },
     accept: () => {
-      addTask(newTask);
+      addTask(requestBody);
     }
   });
 }
 
 function addTask(task){
-  tasksService.post(task)
+  interventionService.postTask(task, props.intervention?.id)
       .then(
           () => {
             toast.add({severity: 'success', summary: 'Success', detail: 'Task added successfully', life: 4000});
@@ -112,7 +135,12 @@ function addTask(task){
 }
 
 function onRequestUpdateTask(task){
-  const updatedTask = new Task(task);
+  const requestBody = {
+    id: task.id,
+    mechanicAssignedId: task.assistantId,
+    description: task.description
+  }
+
   confirm.require({
     message: "Are you sure you want to update this task?",
     header: "Confirmation",
@@ -129,13 +157,13 @@ function onRequestUpdateTask(task){
       size: 'small'
     },
     accept: () => {
-      updateTask(updatedTask);
+      updateTask(requestBody);
     }
   });
 }
 
 function updateTask(task){
-  tasksService.put(task.id, task)
+  interventionService.putTask(task.id, task, props.intervention?.id)
       .then(
           () => {
             toast.add({severity: 'success', summary: 'Success', detail: 'Task updated successfully', life: 4000});
@@ -172,7 +200,7 @@ function onRequestDeleteTask(task){
 }
 
 function deleteTask(task){
-  tasksService.delete(task.id)
+  interventionService.deleteTask(task.id, props.intervention?.id)
       .then(
           () => {
             toast.add({severity: 'success', summary: 'Success', detail: 'Task deleted successfully', life: 4000});
@@ -233,7 +261,7 @@ function updateIntervention(intervention) {
         class="item"
         :mechanics="mechanics"
         :tasks="tasks"
-        :identifier="workshopStore.user.id"
+        :identifier="authenticationStore.user.id"
         @add:task="onRequestAddTask($event)"
         @update:task="onRequestUpdateTask($event)"
         @delete:task="onRequestDeleteTask($event)"
