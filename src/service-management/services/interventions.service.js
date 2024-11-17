@@ -23,6 +23,12 @@ export class InterventionsService {
         return http.put(`${this.resourceEndPoint}/${id}`, data);
     }
 
+    //related to the change of status of the intervention
+
+    startIntervention(id) {
+        return http.post(`${this.resourceEndPoint}/${id}/in-progresses`);
+    }
+
     //task related endpoints
     getAllTasksByInterventionId(interventionId) {
         return http.get(`${this.resourceEndPoint}/${interventionId}/tasks`);
