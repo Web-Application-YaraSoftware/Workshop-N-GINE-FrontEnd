@@ -1,9 +1,8 @@
 <script setup>
 import {useToast} from "primevue/usetoast";
-import {computed, onMounted, ref} from "vue";
+import {onMounted, ref, watchEffect} from "vue";
 import {FilterMatchMode} from '@primevue/core/api';
 import {Intervention} from "../model/intervention.entity.js";
-import {Client} from "../../cmr/model/client.entity.js";
 import {InterventionState} from "../model/intervention-state.enum.js";
 import {useWorkshopStore} from "../services/workshop-store.js";
 import {useRouter} from "vue-router";
@@ -11,6 +10,9 @@ import {useAuthStore} from "../../iam/services/auth-store.js";
 import {WorkshopService} from "../services/workshop.service.js";
 import {ProfilesService} from "../../profile-management/services/profiles.service.js";
 import {VehiclesService} from "../../cmr/services/vehicles.service.js";
+import {Profile} from "../../profile-management/model/profile.entity.js";
+import {Vehicle} from "../model/vehicle.entity.js";
+import {formatDate} from "../../shared/services/date.service.js";
 
 // Services
 const authenticationStore = useAuthStore();
@@ -24,78 +26,65 @@ const toast = useToast();
 const filters = ref({
   'global': {value: null, matchMode: FilterMatchMode.CONTAINS},
   'id': {value: null, matchMode: FilterMatchMode.CONTAINS},
-  'vehicle.owner.firstName': {value: null, matchMode: FilterMatchMode.CONTAINS},
-  'vehicle.licensePlate': {value: null, matchMode: FilterMatchMode.CONTAINS},
-  'registrationDate': {value: null, matchMode: FilterMatchMode.CONTAINS},
-  'interventionType': {value: null, matchMode: FilterMatchMode.CONTAINS},
+  'client': {value: null, matchMode: FilterMatchMode.CONTAINS},
+  'scheduledDate': {value: null, matchMode: FilterMatchMode.EQUALS},
+  'type': {value: null, matchMode: FilterMatchMode.EQUALS},
   'state': {value: null, matchMode: FilterMatchMode.EQUALS },
 });
 const loading = ref(true);
 const getStatusSeverity = (status) => {
   switch (status) {
-    case InterventionState.PENDING:
+    case 'Pending':
       return 'warn';
-    case InterventionState.IN_PROGRESS:
+    case 'InProgress':
       return 'info';
-    case InterventionState.COMPLETED:
+    case 'Completed':
       return 'success';
     default:
       return null;
   }
 };
 const statusOptions = [
-  { label: InterventionState.getName(0), value: 0 },
-  { label: InterventionState.getName(1), value: 1 },
-  { label: InterventionState.getName(2), value: 2 }
+  { label: 'Pending', value: 0 },
+  { label: 'InProgress', value: 1 },
+  { label: 'Completed', value: 2 }
 ]
 // Data
 const interventions = ref([]);
-const vehicles = ref([]);
-const clients = ref([]);
+const interventionsData = ref([]);
 
-const interventionWithClientName = computed(() => {
-  return interventions.value.map(intervention => {
-    const vehicle = vehicles.value.find(vehicle => vehicle?.id === intervention.vehicleId);
-    const client = clients.value.find(client => client?.id === vehicle?.userId);
+onMounted(()=> {
+  getInterventions()
+});
+
+watchEffect( async ()=>{
+  interventionsData.value = await Promise.all(interventions.value.map(async intervention => {
+    const vehicle = await getVehicleById(intervention?.vehicleId);
+    const client = await getProfileByUserId(vehicle?.userId);
     return {
       ...intervention,
-      client: client ? client.fullName : 'Unknown'
+      client: client.fullName
     };
-  });
-});
+  }));
+})
 
-onMounted(async () => {
-  loading.value = true;
-  try {
-    await getInterventions();
-    await getVehicles();
-    await getClients();
-  } catch (error) {
-    console.error("Error loading data:", error);
-    toast.add({
-      severity: 'error', summary: 'Data loading failed', detail: 'An error occurred while loading data', life: 3000 });
-  } finally {
-    loading.value = false;
-  }
-});
-
-
-// Methods
-
-function getInterventions() {
+async function getInterventions() {
   const userId = authenticationStore.user.id;
   const workshopId = authenticationStore.user.workshopId;
-  return workshopService.getAllInterventionsByMechanicLeaderId(workshopId, userId)
-      .then(response => {
-        interventions.value = buildDataFromResponseData(response.data);
-      })
-      .catch(() => {
-        toast.add({
-          severity: 'error', summary: 'Interventions not loaded', detail: 'An error occurred while loading interventions data', life: 3000 });
-      });
+  try {
+    let response = await workshopService.getAllInterventionsByMechanicLeaderId(workshopId, userId);
+    interventions.value = buildDataFromResponseData(response.data);
+    loading.value = false;
+  } catch (e) {
+    loading.value = false;
+    toast.add({
+      severity: 'error',
+      summary: 'Interventions not loaded',
+      detail: 'An error occurred while loading interventions data',
+      life: 3000
+    });
+  }
 }
-
-
 
 function buildDataFromResponseData(interventions){
   return interventions.map(intervention => {
@@ -103,48 +92,14 @@ function buildDataFromResponseData(interventions){
   });
 }
 
-function getClients(){
-  workshopService.getClientsUserIdByWorkShopId(authenticationStore.user.workshopId)
-      .then(
-          async (response) => {
-            clients.value = await buildClientsDataFromResponseData(response.data);
-          },
-          () =>
-          {
-            toast.add({ severity: 'error', summary: 'Clients not loaded', detail: 'An error occurred while loading clients data', life: 3000 })
-          }
-      );
+async function getProfileByUserId(userId) {
+  let response = await profileService.getProfileByUserId(userId);
+  return new Profile(response.data);
 }
 
-function buildClientsDataFromResponseData(userIds){
-  const clientPromises = userIds.map(userId =>
-      profileService.getProfileByUserId(userId)
-          .then(response => new Client(response.data))
-  );
-
-  return Promise.all(clientPromises)
-      .then(clients => {
-        return clients;
-      })
-      .catch(error => {
-        console.error(error);
-        return [];
-      });
-}
-
-function getVehicles() {
-  const vehiclePromises = interventions.value.map(intervention => {
-    return vehicleService.getById(intervention?.vehicleId)
-        .then(response => {
-          vehicles.value.push(response.data);
-        });
-  });
-  return Promise.all(vehiclePromises)
-      .catch(error => {
-        console.error("Error loading vehicles:", error);
-        toast.add({
-          severity: 'error', summary: 'Vehicles not loaded', detail: 'An error occurred while loading vehicles data', life: 3000,});
-      });
+async function getVehicleById(id) {
+  let response = await vehicleService.getById(id);
+  return new Vehicle(response.data);
 }
 
 // Events
@@ -158,7 +113,7 @@ function onRowSelect(data){
 <template>
   <section class="assistants">
     <pv-datatable
-        :value="interventionWithClientName"
+        :value="interventionsData"
         removableSort
         v-model:filters="filters"
         paginator
@@ -189,29 +144,29 @@ function onRowSelect(data){
       </template>
       <template #loading> Loading interventions data. Please wait. </template>
       <pv-column field="id" filterField="id" header="ID" sortable>
-        <template #body="{ data }">
-          {{data.id}}
+        <template #body="data">
+          {{data.data.id}}
         </template>
       </pv-column>
       <pv-column field="client" filterField="client" header="Client" sortable>
-        <template #body="{ data }">
-          {{ data.client }}
+        <template #body="data">
+          {{ data.data.client }}
         </template>
       </pv-column>
-      <pv-column field="registrationDate" filterField="registrationDate" header="Date" sortable>
-        <template #body="{ data }">
-          {{data.scheduledDate.toLocaleDateString()}}
+      <pv-column field="registrationDate" filterField="scheduledDate" header="Date" sortable>
+        <template #body="data">
+          {{formatDate(data.data.scheduledDate)}}
         </template>
       </pv-column>
-      <pv-column field="interventionType" filterField="interventionType" header="Type" sortable>
-        <template #body="{ data }">
-          {{data.type}}
+      <pv-column field="interventionType" filterField="type" header="Type" sortable>
+        <template #body="data">
+          {{data.data.type}}
         </template>
       </pv-column>
-      <pv-column field="state" filterField="state" header="Status">
-        <template #body="{ data }">
-          <pv-tag :severity="getStatusSeverity(data.status)">
-            {{ data.status }}
+      <pv-column field="state" filterField="status" header="Status">
+        <template #body="data">
+          <pv-tag :severity="getStatusSeverity(data.data.status)">
+            {{ data.data.status }}
           </pv-tag>
         </template>
         <template #filter="{ filterModel }">
