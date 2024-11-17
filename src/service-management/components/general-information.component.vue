@@ -46,8 +46,8 @@ const currentInterventionType = ref();
 const currentMechanicId = ref();
 const currentDescription = ref();
 const interventionTypes = ref([
-  { value: InterventionType.MAINTENANCE, label: InterventionType.getName(InterventionType.MAINTENANCE) },
-  { value: InterventionType.REPARATION, label: InterventionType.getName(InterventionType.REPARATION) },
+  { value: 'Maintenance', label: 'Maintenance' },
+  { value: 'Reparation', label: 'Reparation' },
 ]);
 
 onMounted(() => {
@@ -153,7 +153,7 @@ function verifyRole() {
           <pv-select
               v-model="currentMechanicId"
               :options="mechanics"
-              optionValue="id"
+              optionValue="userId"
               showClear
               filter
               optionLabel="fullName"

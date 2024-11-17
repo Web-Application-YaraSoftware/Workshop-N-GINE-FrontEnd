@@ -9,8 +9,7 @@ import {InterventionsService} from "../services/interventions.service.js";
 import {IotDevicesService} from "../services/iot-devices.service.js";
 import {VehiclesService} from "../../cmr/services/vehicles.service.js";
 import {PersonnelService} from "../services/personnel.service.js";
-import {computed, ref, watch} from "vue";
-import {Mechanic} from "../model/mechanic.entity.js";
+import {computed, ref, watch, watchEffect} from "vue";
 import {useAuthStore} from "../../iam/services/auth-store.js";
 import {ProfilesService} from "../../profile-management/services/profiles.service.js";
 import {Profile} from "../../profile-management/model/profile.entity.js";
@@ -30,6 +29,7 @@ const validatedIotInformation = computed(() => {
 const client = ref();
 const clientVehicles = ref([]);
 const mechanics = ref([]);
+const mechanicsWithProfile = ref([]);
 const interventionsService = new InterventionsService();
 const iotDevicesService = new IotDevicesService();
 const profileService = new ProfilesService();
@@ -47,6 +47,12 @@ watch(() => props.intervention,
       getMechanics();
     }
 );
+
+watchEffect(async () => {
+  mechanicsWithProfile.value = await Promise.all(mechanics.value.map( async  (mechanic) => {
+    return await getProfileByUserId(mechanic);
+  }));
+});
 
 function getClient(){
   const targetUserId = clientVehicles.value.length > 0 ? clientVehicles.value[0].userId : null;
@@ -91,16 +97,12 @@ function getMechanics(){
   personnelService.getAllPersonnel(authenticationStore.user.workshopId)
       .then(
           (response) => {
-            mechanics.value = buildMechanicFromResponseData(response.data);
+            mechanics.value = response.data;
           },
           (error) => {
             console.error(error);
           }
       );
-}
-
-function buildMechanicFromResponseData(data) {
-  return data.map((mechanic) => new Mechanic(mechanic));
 }
 
 function getRegisterInterventions() {
@@ -116,6 +118,7 @@ function getRegisterInterventions() {
 }
 
 function getIoTDevice(){
+  if(!props.intervention?.vehicleId) return;
   iotDevicesService.getAllByVehicleId(props.intervention?.vehicleId)
       .then(
           (response) => {
@@ -137,6 +140,11 @@ function buildInterventionFromResponseData(data) {
   return data.map((intervention) => new Intervention(intervention));
 }
 
+async function getProfileByUserId(userId) {
+  let response = await profileService.getProfileByUserId(userId);
+  return new Profile(response.data);
+}
+
 </script>
 
 <template>
@@ -147,7 +155,7 @@ function buildInterventionFromResponseData(data) {
           :intervention="props.intervention"
           :client="client"
           :clientVehicles="clientVehicles"
-          :mechanics="mechanics"
+          :mechanics="mechanicsWithProfile"
       />
     </div>
     <div class="item">
