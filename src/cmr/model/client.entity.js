@@ -5,9 +5,9 @@ import { Role } from "../../iam/model/role.enum.js";
 export class Client extends User {
     constructor({
                     id = 0,
-                    workshop_id = 0,
-                    first_name = '',
-                    last_name = '',
+                    workshopId = 0,
+                    firstName = '',
+                    lastName = '',
                     dni = '',
                     email = '',
                     password = '',
@@ -15,13 +15,14 @@ export class Client extends User {
                     age = 0,
                     location = '',
                     state = AccountState.ACTIVE,
-                    role = Role.CLIENT
+                    role = Role.CLIENT,
+                    userId = 0
                 } = {}) {
         super({
             id: id,
-            workshop_id: workshop_id,
-            first_name: first_name,
-            last_name: last_name,
+            workshop_id: workshopId,
+            first_name: firstName,
+            last_name: lastName,
             dni: dni,
             email: email,
             password: password,
@@ -31,5 +32,6 @@ export class Client extends User {
             state: state,
             role: role
         });
+        this.userId = userId;
     }
 }

@@ -1,16 +1,16 @@
 export const TaskState = Object.freeze({
-    PENDING: 0,
-    CANCELED: 1,
-    DONE: 2,
+    PENDING: 1,
+    INPROGRESS: 2,
+    COMPLETED: 3,
 
     getName(value) {
         switch (value) {
             case this.PENDING:
                 return 'Pending';
-            case this.CANCELED:
-                return 'Canceled';
-            case this.DONE:
-                return 'Done';
+            case this.INPROGRESS:
+                return 'InProgress';
+            case this.COMPLETED:
+                return 'Completed';
             default:
                 return null;
         }
