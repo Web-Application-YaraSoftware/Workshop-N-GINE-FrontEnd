@@ -7,6 +7,10 @@ export class WorkshopService {
         return http.get(`${this.resourceEndPoint}/${id}`);
     }
 
+    getAllInterventionsByWorkshopId(workshopId) {
+        return http.get(`${this.resourceEndPoint}/${workshopId}/interventions`);
+    }
+
     post(data) {
         return http.post(this.resourceEndPoint, data);
     }

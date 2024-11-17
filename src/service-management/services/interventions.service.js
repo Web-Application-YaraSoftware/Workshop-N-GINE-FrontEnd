@@ -1,11 +1,11 @@
 import http from "../../shared/services/http-common.js";
 
 export class InterventionsService {
-    resourceEndPoint = "/interventions";
-
-    getAll() {
-        return http.get(`${this.resourceEndPoint}`);
+    getByVehicleId(id) {
+        return http.get(`/interventions?vehicleId=${id}`);
     }
+
+    resourceEndPoint = "/interventions";
 
     getAllByVehicleId(id) {
         return http.get(`${this.resourceEndPoint}?vehicleId=${id}`);
