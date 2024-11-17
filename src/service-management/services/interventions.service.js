@@ -29,6 +29,10 @@ export class InterventionsService {
         return http.post(`${this.resourceEndPoint}/${id}/in-progresses`);
     }
 
+    finishIntervention(id) {
+        return http.post(`${this.resourceEndPoint}/${id}/confirmations`);
+    }
+
     //task related endpoints
     getAllTasksByInterventionId(interventionId) {
         return http.get(`${this.resourceEndPoint}/${interventionId}/tasks`);
