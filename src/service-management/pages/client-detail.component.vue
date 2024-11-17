@@ -40,7 +40,7 @@ function loadUserIdFromRoute() {
 
 function loadClientData() {
   if (userId.value) {
-    profileService.getById(userId.value).then(client => {
+    profileService.getProfileByUserId(userId.value).then(client => {
       workshopClient.value = new Profile(client.data);
     });
   }
