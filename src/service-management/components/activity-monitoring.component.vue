@@ -1,13 +1,12 @@
 <script setup>
-import {useWorkshopStore} from "../services/workshop-store.js";
 import {Intervention} from "../model/intervention.entity.js";
 import {Task} from "../model/task.entity.js";
-import {computed, onMounted, ref, watch} from "vue";
-import {PersonnelService} from "../services/personnel.service.js";
-import {Mechanic} from "../model/mechanic.entity.js";
+import {computed, onMounted, ref, watch, watchEffect} from "vue";
 import {useAuthStore} from "../../iam/services/auth-store.js";
 import {InterventionsService} from "../services/interventions.service.js";
 import {ProfilesService} from "../../profile-management/services/profiles.service.js";
+import {Profile} from "../../profile-management/model/profile.entity.js";
+import {WorkshopService} from "../services/workshop.service.js";
 
 const props = defineProps({
   intervention: {
@@ -19,13 +18,15 @@ const props = defineProps({
 });
 const authenticationStore = useAuthStore();
 const interventionService = new InterventionsService();
-const personnelService = new PersonnelService();
+const workshopService = new WorkshopService();
 const profileService = new ProfilesService();
+
+const mechanicIds = ref([]);
 const mechanics = ref([]);
 const tasks = ref([]);
 const tasksWithMechanicName = computed(() => {
   return tasks.value.map(task => {
-    const mechanic = mechanics.value.find(mechanic => mechanic?.id === task?.mechanicAssignedId);
+    const mechanic = mechanics.value.find(mechanic => mechanic?.userId === task?.mechanicAssignedId);
     return {
       ...task,
       mechanicName: mechanic?.fullName
@@ -59,6 +60,12 @@ onMounted(() => {
   getMechanics();
 });
 
+watchEffect(async ()=>{
+  mechanics.value = await Promise.all(mechanicIds.value.map( async  (mechanic) => {
+    return await getProfileByUserId(mechanic);
+  }));
+})
+
 function getTasks() {
   interventionService.getAllTasksByInterventionId(props.intervention?.id)
       .then(
@@ -75,11 +82,11 @@ function buildTasksFromResponseData(data){
   return data.map(task => new Task(task))
 }
 
-function getMechanics(){
-  personnelService.getAllPersonnel(authenticationStore.user.workshopId)
+function getMechanics() {
+  workshopService.getMechanicsUserIdByWorkshopId(authenticationStore?.user?.workshopId)
       .then(
-          async response => {
-            mechanics.value = await buildMechanicsFromResponseData(response.data);
+          response => {
+            mechanicIds.value = response.data;
           },
           error => {
             console.error(error);
@@ -87,21 +94,9 @@ function getMechanics(){
       );
 }
 
-function buildMechanicsFromResponseData(userIds){
-
-  const mechanicPromises = userIds.map(userId =>
-      profileService.getProfileByUserId(userId)
-          .then(response => new Mechanic(response.data))
-  );
-
-  return Promise.all(mechanicPromises)
-      .then(mechanics => {
-        return mechanics;
-      })
-      .catch(error => {
-        console.error(error);
-        return [];
-      });
+async function getProfileByUserId(userId) {
+  let response = await profileService.getProfileByUserId(userId);
+  return new Profile(response.data);
 }
 
 </script>
