@@ -17,4 +17,7 @@ export class Vehicle {
         this.iotDeviceId = iotDeviceId;
     }
 
+    get fullName() {
+        return `${this.brand} ${this.model}`;
+    }
 }
