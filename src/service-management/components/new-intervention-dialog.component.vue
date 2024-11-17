@@ -1,91 +1,167 @@
 <script setup>
-import { ref, watch } from 'vue';
-import { ClientsService } from '../../cmr/services/clients.service.js';
-import { VehiclesService } from '../../cmr/services/vehicles.service.js';
+import {onMounted, ref, watch} from 'vue';
+import {VehiclesService} from '../../cmr/services/vehicles.service.js';
+import {ProfilesService} from "../../profile-management/services/profiles.service.js";
+import {WorkshopService} from "../services/workshop.service.js";
+import {Vehicle} from "../model/vehicle.entity.js";
+import {useAuthStore} from "../../iam/services/auth-store.js";
+import {Profile} from "../../profile-management/model/profile.entity.js";
 
-const visible = ref(false);
-const clientsService = new ClientsService();
 const vehiclesService = new VehiclesService();
+const profilesService = new ProfilesService();
+const workshopService = new WorkshopService();
+const authStore = useAuthStore();
+
+const minDate = ref(new Date());
+const visible = ref(false);
 const newIntervention = ref({
-  clientId: null,
   vehicleId: null,
   mechanicLeaderId: null,
-  registrationDate: '',
-  modality: '',
-  description: ''
+  scheduledAt: '',
+  description: '',
+  workshopId: null
 });
+const clientDni = ref(0);
+const userId = ref(0);
+const vehicles = ref([]);
+const mechanics = ref([]);
 
-const clientVehicles = ref([]);
-const clientDni = ref('');
-const mechanicOptions = ref([
-  {id: 1, name: 'Mechanic A'},
-  {id: 2, name: 'Mechanic B'}
-]);
+const selectedVehicle = ref(null);
+const selectedMechanic = ref(null);
+const selectedDate = ref(null);
+const description = ref(null);
 
 const emit = defineEmits(['close', 'submit']);
 
-// Watch for visibility prop from parent
+onMounted(() => {
+  getMechanics();
+});
+
+watch(clientDni, (newValue) => {
+  if (newValue) {
+    getClientByDni();
+  }
+}, {immediate: false});
+
+watch(userId, (newValue) => {
+  if (newValue) {
+    getVehicles();
+  }
+}, {immediate: false});
+
 watch(() => visible, (newValue) => {
   if (!newValue) {
     resetForm();
   }
 });
 
-// Close the dialog
-const closeDialog = () => {
-  emit('close');
-};
+function getVehicles(){
+  if(!userId.value) return;
+  vehiclesService.getByUserId(userId.value)
+      .then(response => {
+        if (response.data) {
+          vehicles.value = buildVehicleFromResponseData(response.data);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching client vehicles:', error);
+      });
+}
 
-// Submit the form
+function buildVehicleFromResponseData(data){
+  return data.map(vehicle => new Vehicle(vehicle));
+}
+
+function getClientByDni(){
+  if(!isValidDNINumber(clientDni.value)) return;
+  profilesService.getByDNI(clientDni.value)
+      .then(response => {
+        if (response.data) {
+          userId.value = response.data.userId;
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching client by DNI:', error);
+      });
+}
+
+function isValidDNINumber(dni){
+  return dni.length === 8;
+}
+
+function getMechanics(){
+  workshopService.getMechanicsUserIdByWorkshopId(authStore.user.workshopId)
+      .then(response => {
+        if (response.data) {
+          getMechanicsProfiles(response.data);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching mechanics user ids:', error);
+      });
+}
+
+function getMechanicsProfiles(userIds){
+  const profilePromises = userIds.map(userId => profilesService.getProfileByUserId(userId));
+  Promise.all(profilePromises)
+      .then(profiles => {
+        mechanics.value = profiles.map(profile => mechanicFromResponseData(profile.data));
+      })
+      .catch(error => {
+        console.error('Error fetching mechanics profiles:', error);
+      });
+}
+
+function mechanicFromResponseData(data){
+  return new Profile(data);
+}
+
+const closeDialog = () => {emit('close');};
+
 const submitForm = () => {
+  if (!isValidForm()) return;
+  setInterventionData();
+  console.log(newIntervention.value);
   emit('submit', newIntervention.value);
   resetForm();
 };
 
-// Fetch client data by DNI
-const fetchClientByDni = async () => {
-  if (clientDni.value) {
-    try {
-      const clientResponse = await clientsService.getByDocument(clientDni.value);
-      const client = clientResponse.data[0];
-      newIntervention.value.clientId = client.id;
+function setInterventionData(){
+  newIntervention.value.vehicleId = selectedVehicle.value.id;
+  newIntervention.value.mechanicLeaderId = selectedMechanic.value.userId;
+  newIntervention.value.scheduledAt = selectedDate.value.toISOString();
+  newIntervention.value.description = description.value;
+  newIntervention.value.workshopId = authStore.user.workshopId;
+}
 
-      // Fetch the vehicles owned by this client
-      const vehiclesResponse = await vehiclesService.getByUserId(client.id);
-      clientVehicles.value = vehiclesResponse.data;
-    } catch (error) {
-      console.error('Error fetching client or vehicles:', error);
-      clientVehicles.value = [];
-    }
-  }
-};
-
-// Reset the form to default state
 const resetForm = () => {
+  clientDni.value = 0;
+  selectedVehicle.value = null;
+  selectedMechanic.value = null;
+  selectedDate.value = null;
+  description.value = null;
   newIntervention.value = {
-    clientId: null,
     vehicleId: null,
     mechanicLeaderId: null,
-    registrationDate: '',
-    modality: '',
+    scheduledAt: '',
     description: ''
   };
-  clientVehicles.value = [];
-  clientDni.value = '';
+  vehicles.value = [];
 };
+
+function isValidForm(){
+  return selectedVehicle && selectedMechanic && selectedDate && description;
+}
 </script>
 
 <template>
   <pv-dialog class="new-intervention-dialog" v-model:visible="visible" header="New Intervention" :modal="true" :closable="true" @hide="closeDialog">
     <section class="form">
-      <pv-inputtext v-model="clientDni" placeholder="Client document No" @blur="fetchClientByDni" required/>
-      <pv-select v-model="newIntervention.vehicleId" :options="clientVehicles" optionLabel="license_plate"
-                 placeholder="License plate" required/>
-      <pv-inputtext v-model="newIntervention.modality" placeholder="Modality" required/>
-      <pv-datepicker v-model="newIntervention.registrationDate" placeholder="Select Date" required/>
-      <pv-select v-model="newIntervention.mechanicLeaderId" :options="mechanicOptions" optionLabel="name"
-                 placeholder="Mechanic leader" required/>
-      <pv-textarea v-model="newIntervention.description" placeholder="Description" required/>
+      <pv-inputtext v-model="clientDni" type="number" placeholder="Client document No"/>
+      <pv-select v-model="selectedVehicle" :options="vehicles" optionLabel="licensePlate" placeholder="License plate"/>
+      <pv-datepicker v-model="selectedDate" placeholder="Select Date" showTime hourFormat="12" fluid :minDate="minDate" showButtonBar/>
+      <pv-select v-model="selectedMechanic" :options="mechanics" optionLabel="fullName" placeholder="Mechanic leader" required/>
+      <pv-textarea v-model="description" placeholder="Description" required/>
     </section>
     <template #footer>
       <section class="footer">
