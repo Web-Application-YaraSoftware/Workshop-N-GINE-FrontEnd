@@ -20,7 +20,7 @@ const props = defineProps({
 const emit = defineEmits(['add:task', 'update:task', 'delete:task']);
 const tasksWithMechanicName = computed(() => {
   return props.tasks.map(task => {
-    const mechanic = props.mechanics.find(mechanic => mechanic.id === task.mechanicAssignedId);
+    const mechanic = props.mechanics.find(mechanic => mechanic.userId === task.mechanicAssignedId);
     return {
       ...task,
       mechanicName: mechanic ? mechanic.fullName : 'Unknown'
@@ -42,7 +42,7 @@ function onSubmit(){
 }
 
 function onRowEditSave(event){
-  if (event.data.description === event.newData.description && event.data.assistantId === event.newData.assistantId) return;
+  if (event.data.description === event.newData.description && event.data.mechanicAssignedId === event.newData.mechanicAssignedId) return;
   if(event.newData && event.newData.description)
     emit('update:task', event.newData);
 }
@@ -80,14 +80,14 @@ function resetForm(){
         <pv-select
             v-model="task.mechanic"
             :options="mechanics"
-            optionValue="id"
+            optionValue="userId"
             showClear
             filter
             optionLabel="fullName"
             placeholder="Select a mechanic"
         >
           <template #option="slotPros">
-            <div v-if="slotPros.option.id===identifier">Yo</div>
+            <div v-if="slotPros.option.userId===identifier">Yo</div>
             <div v-else>{{slotPros.option.fullName}}</div>
           </template>
         </pv-select>
@@ -113,9 +113,9 @@ function resetForm(){
       <pv-column field="mechanicName" header="Mechanic">
         <template #body="{data}">{{data.mechanicName}}</template>
         <template #editor="{data, field}">
-          <pv-select v-model="data.assistantId" :options="mechanics" optionLabel="fullName" optionValue="id" placeholder="Select a mechanic" fluid>
+          <pv-select v-model="data.mechanicAssignedId" :options="mechanics" optionLabel="fullName" optionValue="userId" placeholder="Select a mechanic" fluid>
             <template #option="{option}">
-              <div v-if="option.id===identifier">Yo</div>
+              <div v-if="option.userId===identifier">Yo</div>
               <div v-else>{{option.fullName}}</div>
             </template>
           </pv-select>

@@ -2,10 +2,11 @@
 import TaskDistribution from "./task-distribution.component.vue";
 import DiagnosticIntervention from "./diagnostic-intervention.component.vue";
 import {PersonnelService} from "../services/personnel.service.js";
+import {WorkshopService} from "../services/workshop.service.js";
 import {TasksService} from "../services/tasks.service.js";
 import {useWorkshopStore} from "../services/workshop-store.js";
 import {Mechanic} from "../model/mechanic.entity.js";
-import {onMounted, ref, watch} from "vue";
+import {onMounted, ref, watch, watchEffect} from "vue";
 import {Task} from "../model/task.entity.js";
 import {Intervention} from "../model/intervention.entity.js";
 import { useConfirm } from "primevue/useconfirm";
@@ -13,6 +14,7 @@ import { useToast } from "primevue/usetoast";
 import {InterventionsService} from "../services/interventions.service.js";
 import {useAuthStore} from "../../iam/services/auth-store.js";
 import {ProfilesService} from "../../profile-management/services/profiles.service.js";
+import {Profile} from "../../profile-management/model/profile.entity.js";
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -26,10 +28,12 @@ const props = defineProps({
 const emit = defineEmits(['confirm:updatedIntervention']);
 const personnelService = new PersonnelService();
 const profileService = new ProfilesService();
+const workshopService = new WorkshopService();
 const tasksService = new TasksService();
 const interventionService = new InterventionsService();
 const authenticationStore = useAuthStore();
 const workshopStore = useWorkshopStore();
+const mechanicIds = ref([]);
 const mechanics = ref([]);
 const tasks = ref([]);
 
@@ -44,17 +48,17 @@ onMounted(() => {
   getTasks();
 });
 
+watchEffect(async ()=>{
+  mechanics.value = await Promise.all(mechanicIds.value.map( async  (mechanic) => {
+    return await getProfileByUserId(mechanic);
+  }));
+})
+
 function getMechanics() {
-  personnelService.getAllPersonnel(authenticationStore.user.workshopId)
+  workshopService.getMechanicsUserIdByWorkshopId(authenticationStore?.user?.workshopId)
       .then(
           response => {
-            buildMechanicFromResponseData(response.data)
-                .then(mechanicsData => {
-                  mechanics.value = mechanicsData;
-                })
-                .catch(error => {
-                  console.error(error);
-                });
+            mechanicIds.value = response.data;
           },
           error => {
             console.error(error);
@@ -62,22 +66,10 @@ function getMechanics() {
       );
 }
 
-function buildMechanicFromResponseData(userIds) {
-  const mechanicPromises = userIds.map(userId =>
-      profileService.getProfileByUserId(userId)
-          .then(response => new Mechanic(response.data))
-  );
-
-  return Promise.all(mechanicPromises)
-      .then(mechanics => {
-        return mechanics;
-      })
-      .catch(error => {
-        console.error(error);
-        return [];
-      });
+async function getProfileByUserId(userId) {
+  let response = await profileService.getProfileByUserId(userId);
+  return new Profile(response.data);
 }
-
 
 function getTasks() {
   interventionService.getAllTasksByInterventionId(props.intervention?.id)
@@ -137,7 +129,7 @@ function addTask(task){
 function onRequestUpdateTask(task){
   const requestBody = {
     id: task.id,
-    mechanicAssignedId: task.assistantId,
+    mechanicAssignedId: task.mechanicAssignedId,
     description: task.description
   }
 
