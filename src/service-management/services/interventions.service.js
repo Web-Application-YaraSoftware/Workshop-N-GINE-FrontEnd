@@ -50,6 +50,16 @@ export class InterventionsService {
         return http.put(`${this.resourceEndPoint}/${interventionId}/tasks/${id}`, data);
     }
 
+    //related to the change of status of the task
+
+    startTask(id, interventionId) {
+        return http.post(`${this.resourceEndPoint}/${interventionId}/tasks/${id}/in-progresses`);
+    }
+
+    finishTask(id, interventionId) {
+        return http.post(`${this.resourceEndPoint}/${interventionId}/tasks/${id}/confirmations`);
+    }
+
     //checkpoint related endpoints
     getAllCheckpointsByInterventionIdAndTaskId(taskId, interventionId) {
         return http.get(`${this.resourceEndPoint}/${interventionId}/tasks/${taskId}/checkpoints`);

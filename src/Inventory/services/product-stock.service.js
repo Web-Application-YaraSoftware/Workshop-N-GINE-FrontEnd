@@ -8,10 +8,6 @@ export class ProductStockService {
     getAllByWorkshopId(id) {
         return http.get(`${this.resourceEndpoint}?workshopId=${id}`);
     }
-
-    getById(productStockId) {
-        return http.get(`${this.resourceEndpoint}/${productStockId}`);
-    }
   
     update(id, data){
         return http.put(`${this.resourceEndpoint}/${id}`, data);
