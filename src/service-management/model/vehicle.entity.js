@@ -6,7 +6,7 @@ export class Vehicle {
                     model = '',
                     image = '',
                     userId = 0,
-                    iotDeviceId = 0
+                    ioTDeviceId = 0
                 } = {}) {
         this.id = id;
         this.licensePlate = licensePlate;
@@ -14,7 +14,7 @@ export class Vehicle {
         this.model = model;
         this.image = image;
         this.userId = userId;
-        this.iotDeviceId = iotDeviceId;
+        this.iotDeviceId = ioTDeviceId;
     }
 
     get fullName() {
