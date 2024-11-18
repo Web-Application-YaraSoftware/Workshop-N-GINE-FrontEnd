@@ -18,7 +18,7 @@
 
   function redirectByRole(){
     if(authStore.isClient){
-      router.push({name: 'vehicles'});
+      router.push({name: 'vehicles', params : {carOwnerId: authStore.user.id}});
     }
     if(authStore.isMechanic){
       router.push({name: 'activities'});
