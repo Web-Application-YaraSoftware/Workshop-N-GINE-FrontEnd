@@ -1,26 +1,23 @@
 <script setup>
 import {ref, onMounted} from 'vue';
 import {useRouter} from 'vue-router';
-import {ProfilesService} from "../../profile-management/services/profiles.service.js";
 import {VehicleService} from "../services/vehicle.service.js";
 import ConfirmationDialog from "../../shared/components/confirmation-dialog.component.vue";
 import NewVehicleDialog from "../components/new-vehicle-dialog.component.vue";
 import VehicleItem from "../components/vehicle-item.component.vue";
 import {Vehicle} from "../model/vehicle.entity.js";
-import {Profile} from "../../profile-management/model/profile.entity.js";
 import {useAuthStore} from "../../iam/services/auth-store.js";
 import {useToast} from "primevue/usetoast";
 
 //Router and services
 const router = useRouter();
-const profileService = new ProfilesService();
 const vehicleService = new VehicleService();
 const authenticationStore = useAuthStore();
 const toast = useToast();
 
 //Reactive state
-const userId = ref(0);
-const workshopClient = ref(new Profile());
+const userId = authenticationStore.user.id;
+
 const vehicles = ref([]);
 
 //Dialog states
@@ -31,16 +28,9 @@ const onConfirmAction = ref(() => {
 const showNewVehicleDialog = ref(false);
 const newVehicle = ref(new Vehicle());
 
-function loadClientData() {
-  if (authenticationStore.user.id) {
-    return profileService.getProfileByUserId(authenticationStore.user.id).then(client => {
-      workshopClient.value = new Profile(client.data);
-    });
-  }
-}
 
-function loadVehiclesData() {
-  return vehicleService.getByUserId(workshopClient.value.id).then(response => {
+function getVehicles() {
+  return vehicleService.getByUserId(userId).then(response => {
     const vehiclesData = response.data;
     vehicles.value = createVehicleListFromResponseData(vehiclesData);
   }).catch(error => {
@@ -64,11 +54,11 @@ function registerNewVehicle(vehicle) {
     'brand': vehicle.brand,
     'model': vehicle.model,
     'image': newImage,
-    "userId": workshopClient.value.id
+    "userId": userId
   }
   vehicleService.postVehicle(response)
       .then(() => {
-        loadVehiclesData();
+        getVehicles();
         showNewVehicleDialog.value = false;
         toast.add({severity: 'success', summary: 'Vehicle registered', detail: 'The vehicle was successfully registered', life: 3000 });
   })
@@ -103,15 +93,8 @@ function viewVehicleDetail(vehicle) {
   router.push(`/vehicle/${vehicle.id}`);
 }
 
-onMounted(async () => {
-  try {
-    await loadClientData();
-    await loadVehiclesData();
-  } catch (error) {
-    console.error("Error loading data:", error);
-    toast.add({
-      severity: 'error', summary: 'Data loading failed', detail: 'An error occurred while loading data', life: 3000 });
-  } finally {}
+onMounted(() => {
+  getVehicles();
 });
 </script>
 
