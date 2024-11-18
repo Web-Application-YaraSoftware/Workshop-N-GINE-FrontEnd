@@ -1,13 +1,23 @@
 <script setup>
 import {useWorkshopStore} from "../../service-management/services/workshop-store.js";
 import {useUiStore} from "../services/ui-store.js";
+import {useAuthStore} from "../../iam/services/auth-store.js";
 import {computed} from "vue";
+import {useRouter} from "vue-router";
 
 const uiStore = useUiStore();
+const authStore = useAuthStore();
 const workshopStore = useWorkshopStore();
+const router = useRouter();
 
 const workshopName = workshopStore?.workshopName;
 const visibilitySidebar = computed(() => uiStore.sidebar);
+
+function logout() {
+  authStore.logout();
+  router.push({name: 'login'});
+}
+
 </script>
 
 <template>
@@ -26,12 +36,7 @@ const visibilitySidebar = computed(() => uiStore.sidebar);
         </div>
       </template>
       <template #end>
-        <div class="account-section">
-          <i class="pi pi-user user-icon"></i>
-          <span class="account-link">
-            Account <i class="pi pi-angle-down"></i>
-          </span>
-        </div>
+        <pv-button @click="logout">Log out</pv-button>
       </template>
     </pv-toolbar>
   </header>
