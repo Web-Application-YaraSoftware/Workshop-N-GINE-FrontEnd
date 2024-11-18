@@ -9,12 +9,14 @@ import VehicleItem from "../components/vehicle-item.component.vue";
 import {Vehicle} from "../model/vehicle.entity.js";
 import {Profile} from "../../profile-management/model/profile.entity.js";
 import {useAuthStore} from "../../iam/services/auth-store.js";
+import {useToast} from "primevue/usetoast";
 
 //Router and services
 const router = useRouter();
 const profileService = new ProfilesService();
 const vehicleService = new VehicleService();
 const authenticationStore = useAuthStore();
+const toast = useToast();
 
 //Reactive state
 const userId = ref(0);
@@ -56,13 +58,34 @@ function startVehicleRegistration() {
 }
 
 function registerNewVehicle(vehicle) {
-  vehicle.userId = userId.value;
-  vehicleService.postVehicle(vehicle).then(() => {
-    loadVehiclesData();
-    showNewVehicleDialog.value = false;
-  }).catch(error => {
-    console.error('Error creating vehicle:', error);
+  const newImage = setRandomImage();
+  const response = {
+    'licensePlate': vehicle.licensePlate,
+    'brand': vehicle.brand,
+    'model': vehicle.model,
+    'image': newImage,
+    "userId": workshopClient.value.id
+  }
+  vehicleService.postVehicle(response)
+      .then(() => {
+        loadVehiclesData();
+        showNewVehicleDialog.value = false;
+        toast.add({severity: 'success', summary: 'Vehicle registered', detail: 'The vehicle was successfully registered', life: 3000 });
+  })
+      .catch(error => {
+        console.error('Error registering vehicle:', error);
+        toast.add({severity: 'error', summary: 'Vehicle registration failed', detail: 'An error occurred while registering the vehicle', life: 3000 });
   });
+}
+
+function setRandomImage(){
+  const images = [
+      'https://img.freepik.com/vector-premium/dibujos-animados-cabriolet-rojo-coche-verano-moda-techo-plano_151150-4733.jpg',
+      'https://img.freepik.com/vector-premium/dibujos-animados-elegante-cabriolet-coche-verano-estilo-objeto-color-plano-techo-vehiculo-personal-moda-aislado-sobre-fondo-blanco-vista-lateral-lujoso-automovil-nuevo_151150-4632.jpg',
+      'https://img.freepik.com/vector-premium/ilustracion-dibujos-animados-cabriolet-blanco-coche-verano-elegante-objeto-color-techo-vehiculo-transporte-lujo-automovil-personal-estilo-sobre-fondo-blanco_151150-2408.jpg',
+      'https://img.freepik.com/vector-premium/vista-lateral-coche-azul-puerta-abierta-nuevo-automovil-moderno-automovil-puerta-trasera-vehiculo-carretera-ilustracion-vector-dibujos-animados-planos-transporte-motor-aislado-sobre-fondo-blanco_198278-13750.jpg?w=360'
+  ];
+  return images[Math.floor(Math.random() * images.length)];
 }
 
 function onConfirm() {
@@ -94,6 +117,7 @@ onMounted(async () => {
 
 <template>
   <main>
+    <pv-toast/>
     <div class="section-header">
       <h2 class="section-title">Vehicles:</h2>
       <pv-button label="+ New vehicle" @click="startVehicleRegistration"/>
