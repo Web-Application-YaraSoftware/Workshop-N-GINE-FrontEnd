@@ -58,10 +58,15 @@ export const useAuthStore = defineStore( 'auth', ()=>{
 
     function logout(){
         token.value = '';
+        user.value.id = 0;
+        user.value.roleId = 0;
+        user.value.workshopId = 0;
+        workshopStore.workshopName = '';
         localStorage.removeItem('token');
-        localStorage.removeItem('role');
+        localStorage.removeItem('roleId');
         localStorage.removeItem('userId');
         localStorage.removeItem('workshopId');
+        localStorage.removeItem('workshopName');
     }
 
     return {

@@ -34,7 +34,7 @@ function onSubmit(event) {
 }
 
 function saveInStore(response){
-  authStore.setAuth(response.data.token || 'tokenDefault');
+  authStore.setAuth(response.data.token);
   authStore.setUserId(response.data.id);
   authStore.setRoleId(response.data.roleId);
   authStore.setWorkshopId(response.data.workshopId);
