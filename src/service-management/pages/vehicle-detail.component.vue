@@ -1,5 +1,5 @@
 <script setup>
-import {ref, onMounted} from 'vue';
+import {ref, onMounted, watch} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
 import {Vehicle} from "../model/vehicle.entity.js";
 import {VehicleService} from "../services/vehicle.service.js";
@@ -21,11 +21,12 @@ const iotDevicesService = new IotDevicesService();
 const registerInterventions = ref([]);
 const vehicleId = ref(0);
 const vehicle = ref({});
-const iotDevice = ref({});
+const iotDevice = ref(null);
 const currentView = ref('activityLog');
 const dialogVisible = ref(false);
 
 function getRegisterInterventions() {
+  if (vehicleId.value === 0) return;
   interventionsService.getAllByVehicleId(vehicleId.value)
       .then(
           (response) => {
@@ -38,6 +39,8 @@ function getRegisterInterventions() {
 }
 
 function getIotDevice() {
+  if (vehicleId.value === 0) return;
+  if (vehicle.value.iotDeviceId === null) return;
   iotDevicesService.getAllByVehicleId(vehicleId.value)
       .then(
           (response) => {
@@ -95,6 +98,9 @@ function deleteVehicle() {
 onMounted(() => {
   loadVehicleIdFromRoute();
   loadVehicleData();
+});
+
+watch(vehicle, () => {
   getRegisterInterventions();
   getIotDevice();
 });
