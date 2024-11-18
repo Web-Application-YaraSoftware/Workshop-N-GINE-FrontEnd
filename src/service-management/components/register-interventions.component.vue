@@ -54,7 +54,7 @@ function onRedirectToIntervention(interventionId) {
 
 <template>
   <section class="timeline-section">
-    <pv-timeline :value="interventions" :align="timelineAlign">
+    <pv-timeline v-if="interventions.length > 0" :value="interventions" :align="timelineAlign">
       <template #content="slotProps">
         <pv-card class="timeline-card">
           <template #header>
@@ -74,10 +74,19 @@ function onRedirectToIntervention(interventionId) {
         </pv-card>
       </template>
     </pv-timeline>
+    <div v-else class="no-interventions">
+      <p>No interventions found</p>
+    </div>
   </section>
 </template>
 
 <style scoped>
+.no-interventions {
+  text-align: center;
+  font-size: 1rem;
+  color: #7f8c8d;
+  padding: 2rem;
+}
 .timeline-section {
   padding: 2rem;
   border-radius: 15px;
